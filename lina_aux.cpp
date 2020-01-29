@@ -20,7 +20,7 @@ bool Lina::IsValidMatrixName(std::string name)
         A name include only _underscores, digits, and latin characters
     */
     for (auto &c: name)
-        if (!std::isalnum(c) || c!='_')
+        if (!(std::isalnum(c) || c=='_'))
             return false;
 
     /*

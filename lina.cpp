@@ -157,15 +157,13 @@ int Lina::Exit(std::vector<std::string> &arguments)
 
 int Lina::Help(std::vector<std::string> &arguments)
 {
-    std::string fileName("VN-help");
+    std::string fileName("en_help.txt");
     std::fstream help;
-    //std::cout<<"I'm helping Yay!\n";
-    if (_CurrentLanguage=="VN-vn")
-        fileName="VN-help";
-    else 
-        fileName="En-en-help";
 
-    help.open(fileName);
+    if (_CurrentLanguage=="VN-vn")
+        fileName="vn_help.txt";
+
+    help.open(fileName, std::ios::in);
 
     std::string line;
     if (help.is_open())
@@ -174,57 +172,19 @@ int Lina::Help(std::vector<std::string> &arguments)
             std::cout<<line<<"\n";
         }
     else 
-        std::cerr<<"Error opening file "<<fileName<<"\n";
+        std::cerr<<"Error opening file \""<<fileName<<"\"\n";
 
     help.close();
     return HELP;
 }
 
 
-/*
-    !!Find a way to initialize Regexes only once!!!
-*/
 int Lina::Create(std::vector<std::string> &arguments)
 {
-    /*
-        THESE ARE OLD CODES. THEY ARE KEPT FOR EDUCATIONAL PURPOSES. REALLY!
-
-        The following things will be captured after regexing:
-        +) Matrix_Name (Mandatory)
-        +) Digits for matrix size (Only two or no numbers are accepted)
-    std::string Command("[\\w\\d_]+");
-    std::string space("\\s+");
-    std::string maybeSpace("\\s*");
-    std::string Matrix_Name("([_\\w][_\\w\\d]*)");
-    std::string MatrixSizeStyle("(\\d+)?(?>\\s*x?\\s*)(\\d+)?");
-
-    std::regex rgx( Command + space + 
-                    Matrix_Name + space + 
-                    MatrixSizeStyle + maybeSpace
-                    ,
-                    std::regex_constants::icase);
-    std::smatch sm;
-
-    
-    if (std::regex_search(_Buffer, sm, rgx))
-    {
-        if (sm[2].str().size()==0)
-            _Matrices.insert({sm[1].str(), Matrix<Fraction>(0, 0)});
-        else if (sm[3].str().size()==0)
-            throw(Mexception("And what am i supposed to do with only one number? :/"));
-        else 
-            _Matrices.insert({sm[1].str(), 
-                                Matrix<Fraction>(
-                                    std::stoll(sm[2].str()), 
-                                    std::stoll(sm[3].str())
-                                )});
-    }
-    else 
-    */
     if (arguments.size()==1)
         throw (Mexception("You gave me no argument :/ Why?"));
 
-    if (!IsValidMatrixName(arguments[1]));
+    if (!IsValidMatrixName(arguments[1]))
         throw(Mexception("The name \""+arguments[1]+"\" is already reserved. Please come up with another one."));
 
     // At this point, there's at least 2 arguments that have been given
