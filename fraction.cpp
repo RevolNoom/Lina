@@ -72,46 +72,6 @@ bool Fraction::IsInteger() const
 /* I/O  O P E R A T I O N S */
 
 
-std::istream& operator>>(std::istream& is, Fraction& f)
-{
-    //Grab the numerator
-    if (! (is>>f._Numerator))
-        throw(Mexception("Numerator input failed"));
-    
-    
-    /*
-        A user may input a fraction that has as many space between 
-        numerator, slash, and denominator as they want
-
-        or maybe only one number and a lot of space behind
-
-        So we remove space from input until we get a character
-    */
-    while (std::isspace(is.peek()) && is.peek()!='\n' )
-    {
-            is.ignore(1);  
-    }
-
-    //I can't think of any other reasons that fails istream
-    //If it reaches here, then it has run out of buffer, i guess?
-    
-    if (is.peek()=='/')
-    {
-        is.ignore(1);
-        while ((std::isspace(is.peek()) && is.peek()!='\n' && (is.good())))
-        {
-            is.ignore(1);  
-        }
-
-        if(is.peek()=='\n' || !(is>>std::skipws>>f._Denominator))
-        {
-            throw (Mexception("Denominator input failed\n"));
-        }
-
-        f.Reduce();
-    }
-    return is;
-}
 
 
 std::ostream& operator<<(std::ostream& os, const Fraction& f)
@@ -302,4 +262,34 @@ bool operator<(long long a, Fraction f)
 bool operator<=(long long a, Fraction f)
 {
     return f>=a;
+}
+
+
+//This works for std::cin only
+std::istream& operator>>(std::istream& is, Fraction& f)
+{   
+    is>>f._Numerator;
+
+    char input;
+
+    while (is>>std::noskipws>>input)
+    {
+        if (input=='\n')
+            return is;
+
+        else if (input=='/')
+        {
+            while(is>>std::noskipws>>input)
+                if (input=='\n')
+                    throw(Mexception("False input format."));
+                else if (std::isdigit(input))
+                {
+                    is.unget();
+                    is>>f._Denominator;
+                    return is;
+                }
+
+        }
+    }
+    return is;
 }

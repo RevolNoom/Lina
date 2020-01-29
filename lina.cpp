@@ -3,7 +3,6 @@
 enum CommandValues
 {
     EXIT,
-    IDLE,
     CHANGE,
     HELP,
     SHOW,
@@ -15,53 +14,52 @@ enum CommandValues
 };
 
 
-Lina::Lina(): _Matrices(std::unordered_map<std::string, Matrix<Fraction>>()),
-              _Commands(MAX_VALUE),
-              _CurrentLanguage("EN-en")
+Lina::Lina():_CurrentLanguage("EN-en")
 {
-    _Commands.insert({std::string("exit"), 
-                      std::function<int()>(std::bind(&Lina::Exit, this)) 
+    using namespace std::placeholders;
+    using namespace std;
+
+    _Commands.insert({string("exit"), 
+                      function<int(vector<string> &)>(bind(&Lina::Exit, this, _1)) 
                       });
    
-    _Commands.insert({std::string("help"), 
-                      std::function<int()>(std::bind(&Lina::Help, this))
+    _Commands.insert({string("help"), 
+                      function<int(vector<string> &)>(bind(&Lina::Help, this, _1))
                       });
 
-    _Commands.insert({std::string("create"), 
-                      std::function<int()>(std::bind(&Lina::Create, this))
+    _Commands.insert({string("create"), 
+                      function<int(vector<string> &)>(bind(&Lina::Create, this, _1))
+                      });
+
+    _Commands.insert({string("show"), 
+                      function<int(vector<string> &)>(bind(&Lina::Show, this, _1))
                       });
     /*
-   _Commands.insert({std::string(""), IDLE});
-   _Commands.insert({std::string("change"), CHANGE});
-   _Commands.insert({std::string("show"), SHOW});
-   _Commands.insert({std::string(""), });*/
+   _Commands.insert({string("change"), CHANGE});
+   _Commands.insert({string(""), });*/
 }
 
 int Lina::Start()
 {
-    ChangeLanguage();
-
-    do
+    //ChangeLanguage();
+    int LastCommand=1;
+    while(LastCommand!=EXIT)
     {
-        std::cout<<"\nWhat would you like to do? \n"
-                 <<"type \"help\" for a list of commands to use.\n";
-        
         try
         {
-            if (GetCommand()==EXIT)
-                break;
+            LastCommand= GetCommand();  
         }
+
         catch(std::exception &M)
         {
             std::cout<<M.what()<<"\n";
             std::cout<<"Please re-enter your command.\n";
         }
     }
-    while(1);
-
     return 0;
 }
 
+/*
 int Lina::ChangeLanguage()
 {
     //std::cout<<"Tieng Viet (vn)\nEnglish (en)\n";
@@ -82,58 +80,103 @@ int Lina::ChangeLanguage()
         langPack>>_Language[iii];
 
     return CHANGE_LANGUAGE;
-}
+}*/
 
+int Lina::Show(std::vector<std::string> &arguments)
+{
+    //If the user only specify SHOW as their command
+    //Then we'll show them ALL the matrix
+    if (arguments.size()==1)
+        for (auto &pair: _Matrices)
+        {
+            std::cout<<"Matrix "<<pair.first<<": \n"<<pair.second<<"\n\n";
+        }
+
+    else 
+        for (int iii=1; iii<arguments.size(); ++iii)
+        {
+            if (_Matrices.find(arguments[iii])==_Matrices.end())
+                throw(Mexception(std::string("There's no matrix with name ")+arguments[iii]));
+            std::cout<<"Matrix "<<arguments[iii]<<": \n"<<_Matrices[arguments[iii]]<<"\n\n";
+        }
+    return SHOW;
+}
 
 int Lina::GetCommand()
 {
     //Get the command from keyboard
-    std::cin.ignore();
-    std::getline(std::cin, _Buffer);
-    std::transform(_Buffer.begin(), _Buffer.end(), _Buffer.begin(), (int (*)(int))std::toupper);
+    std::cout<<"\nWhat would you like to do? \n"
+             <<"type \"help\" for a list of commands to use.\n";
+
+    std::stringstream ss;
+    std::string temp;
+    std::getline(std::cin, temp);
+    ss<<temp;
+    std::vector<std::string> arguments;
+    while (!ss.eof())
+    {
+        arguments.push_back(std::string(""));
+        ss>>arguments.back();
+    }
     
-
-    //Get the command (or the name of a matrix, whichever is the first thing)
-    std::regex Command("^//s*([\\w_][\\w\\d_]*)");
-    std::smatch sm;
-    std::regex_search(_Buffer, sm, Command);
-
     /*
-    std::string part("([\\w\\d_]+|[+-*=]+))
-    std::string space("")
-    std::regex rgx(part+)
+    std::cout<<"These are the grabbed arguments:\n";
+    for (auto &a: arguments)
+    {
+        std::cout<<a<<"\n";
+    }
+    std::cout<<"\n\n";
     */
-
+    //If the first thing the user gives us is a matrix name
+    //Then we need to calculate something
+    if (IsValidMatrixName(arguments[0]) && 
+        _Matrices.find(arguments[0])!=_Matrices.end())
+    {
+        //std::cout<<"This is matrix\n";
+        return Calculate(arguments);
+    }
     
-    auto execute =_Commands.find(sm[1].str());
-    if (execute!=_Commands.end())
-        return execute->second();
+    std::transform(arguments[0].begin(), 
+                    arguments[0].end(), 
+                    arguments[0].begin(), 
+                    (int (*)(int)) std::tolower);
 
-    auto matrix= _Matrices.find(sm[1].str());
-    if (matrix!=_Matrices.end())
-        return Calculate();
-    
-    return (execute->second)();
+    if (_Commands.find(arguments[0])==_Commands.end())
+        throw(Mexception("There's no command available with that keyword."));
+
+    //std::cout<<"Command: "<<arguments[0]<<"\n";
+    return _Commands[arguments[0]](arguments);
 }
 
 
-int Lina::Exit()
+int Lina::Exit(std::vector<std::string> &arguments)
 {
     std::cout<<"See you again!\n";
     return EXIT;
 }
 
-int Lina::Help()
+int Lina::Help(std::vector<std::string> &arguments)
 {
-    std::ifstream help;
+    std::string fileName("VN-help");
+    std::fstream help;
+    //std::cout<<"I'm helping Yay!\n";
     if (_CurrentLanguage=="VN-vn")
-        help.open("VN-help");
-    
-    for (std::string line;  std::getline(help, line); )
-    {
-        std::cout<<line<<"\n";
-    }
-    
+        fileName="VN-help";
+    else 
+        fileName="En-en-help";
+
+    help.open(fileName);
+
+    std::string line;
+    if (help.is_open())
+        while (std::getline(help, line))
+        {
+            std::cout<<line<<"\n";
+        }
+    else 
+        std::cerr<<"Error opening file "<<fileName<<"\n";
+
+    help.close();
     return HELP;
 }
 
@@ -141,13 +184,14 @@ int Lina::Help()
 /*
     !!Find a way to initialize Regexes only once!!!
 */
-int Lina::Create()
+int Lina::Create(std::vector<std::string> &arguments)
 {
     /*
+        THESE ARE OLD CODES. THEY ARE KEPT FOR EDUCATIONAL PURPOSES. REALLY!
+
         The following things will be captured after regexing:
         +) Matrix_Name (Mandatory)
         +) Digits for matrix size (Only two or no numbers are accepted)
-    */
     std::string Command("[\\w\\d_]+");
     std::string space("\\s+");
     std::string maybeSpace("\\s*");
@@ -176,39 +220,66 @@ int Lina::Create()
                                 )});
     }
     else 
+    */
+    if (arguments.size()==1)
+        throw (Mexception("You gave me no argument :/ Why?"));
+
+    if (!IsValidMatrixName(arguments[1]));
+        throw(Mexception("The name \""+arguments[1]+"\" is already reserved. Please come up with another one."));
+
+    // At this point, there's at least 2 arguments that have been given
+    
+    // The user just want to create a default matrix for future use.
+    // And that would be a zero matrix
+    if (arguments.size()==2)
+    {
+        _Matrices.insert({arguments[1], Matrix<Fraction>(0, 0)});
+        return CREATE;
+    }
+
+    // Have i ever tell you how much i love regex?
+    std::string input;
+    std::smatch sm;
+    for (int iii=2; iii<arguments.size(); ++iii)
+        input+=arguments[iii]+" ";
+    
+    /*
+        These are the correct ways to create a matrix:
+
+        <NAME> <Number> <Number>
+        <Number> x <Number>     Yes, a literal 'x' character
+        <Number>x <Number>
+        <Number> x<Number>
+        <Number>x<Number>
+
+
+        For example:
+
+        2 4
+        2 x 4
+        2x 4
+        2    x4
+        2x4
+
+        Any superfluous arguments, or lack of numbers
+        and the command is treated invalid
+
+    */
+    //std::cout<<"We need to regex this:"<<input<<"\n";
+    if (!std::regex_match(input, sm, std::regex("\\s*(\\d+)\\s*x?\\s*(\\d+)\\s*")))
         throw (Mexception("There might have been some mistakes. Could you try again?"));
+
+    _Matrices.insert({arguments[1], 
+                        Matrix<Fraction>(
+                            std::stoi(sm[1].str()), 
+                            std::stoi(sm[2].str()))
+                    });
     return CREATE;
 }
 
-int Lina::Calculate()
+int Lina::Calculate(std::vector<std::string> &arguments)
 {
-    return EXIT;
+    return CALCULATE;
 }
 
 
-bool Lina::IsValidName(std::string name)
-{
-    /*
-        A name must have at least a character
-        And its first character must not be a digit
-    */
-    if (name.size()==0          || 
-        std::isdigit(name.front()))
-        return false;
-
-    /*
-        A name include only _underscores, digits, and latin characters
-    */
-    for (auto &c: name)
-        if (!std::isalnum(c) || c!='_')
-            return false;
-
-    /*
-        And it must not collide with other keyword/matrix name
-    */
-    if (_Matrices.find(name)!=_Matrices.end() ||
-        _Commands.find(name)!=_Commands.end())
-        return false;
-    
-    return true;
-}

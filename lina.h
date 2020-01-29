@@ -7,6 +7,12 @@
     +)Keywords managing
     +)... and many more
 */
+/*
+    Future updates:
+    +) Create more than one matrix with keyword Create
+
+*/
+
 
 #ifndef LINA_H
 #define LINA_H
@@ -25,17 +31,17 @@ private:
     std::unordered_map<std::string, Matrix<Fraction>> _Matrices;
 
     //Map a command with a corresponding value
-    std::unordered_map<std::string, std::function<int()>> _Commands;
+    std::unordered_map<std::string, 
+                        std::function<
+                            int(std::vector<std::string> &
+                                        )>> 
+                                        _Commands;
 
     //The name of the language file
     std::string _CurrentLanguage;
     
     //An array to keep the language pack for use
-    std::vector<std::string> _Language;
-
-    //A string used to save the command given by the user
-    //This command is then shared between function calls
-    std::string _Buffer;
+    std::vector<std::string>  _Language;
 
 public:
 
@@ -50,9 +56,16 @@ public:
     
     //int Intro();
 
-    int ChangeLanguage();
+    /*
+     * GetCommand requests the user to input from keyboard
+     * And then it breaks that input to many arguments (based on whitespace)
+     * Those arguments are then passed down to another commands
+     */
+    int GetCommand();
 
-    int Help();
+    int ChangeLanguage(std::vector<std::string> & arguments);
+
+    int Help(std::vector<std::string> & arguments);
 
     /*
         Create a matrix with a given size
@@ -69,13 +82,13 @@ public:
             Matrix 3 4
             Matrix
     */
-    int Create();
+    int Create(std::vector<std::string> & arguments);
 
-    int Calculate();
+    int Calculate(std::vector<std::string> & arguments);
 
-    int GetCommand();
+    int Show(std::vector<std::string> & arguments);
 
-    int Exit();
+    int Exit(std::vector<std::string> & arguments);
 
 protected:
     /*
@@ -88,7 +101,7 @@ protected:
         +) Does not begin with a digit
         +) It does not collide with a KEYWORD, or name of an Already Existing Matrix
     */
-    bool IsValidName(std::string name);
+    bool IsValidMatrixName(std::string name);
 
 
 };

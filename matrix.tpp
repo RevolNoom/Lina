@@ -310,3 +310,26 @@ bool Matrix<_Type>::IsInvertible() const
 
 
 /* I/O  O P E R A T I O N S */
+
+ //Receive input for ALL elements in the matrix
+template<typename _Type>
+std::istream& operator>>(std::istream& IS, Matrix<_Type>& M)
+{
+    for (size_t iii=0; iii<M.Rows(); ++iii)
+    {
+        std::cout<<"Enter row "<<iii<<": ";
+        for (size_t jjj=0; jjj<M.Columns(); ++jjj)
+        {
+            IS>>M.at(iii, jjj);
+        }
+
+        while (IS.peek()!='\n')
+        {
+            if (!std::isspace(IS.peek()))
+                throw(Mexception("Input has too many elements for one row\n"));
+            
+            IS.ignore(1);
+        }
+    }   
+    return IS;
+}
