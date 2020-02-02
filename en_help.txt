@@ -1,0 +1,39 @@
+	Create a matrix:
+	(*)	create <Matrix Name> [<Row> [x] <Column>]
+		This will create a matrix with the given name and specified size (if given) or zero matrix (if not)
+		Your matrix name must not collide with any of the program's keywords or any of your already existing matrix
+		For example:
+			create ABC		# Will create matrix ABC with size 0x0
+			create ABC 1 9		# Create matrix ABC with 1 row and 9 columns
+			create ABC 1x9		# Is the same as the last, using letter 'x' is optional
+
+	Display matrices:
+	(*) 	show [Matrix name]
+		This command will display the matricx you want to see, or display all matrices you have created if you give it no name
+		For example:
+			show			# Display ALL matrices
+			show ABC		# Display matrix ABC
+
+	Matrix calculation using this application:
+		Let's suppose you have 3 matrices: A, B, C of the same size (calculation of different sizes matrices are available,
+		but for the sake of this tutorial, I'll keep it simple).
+		If you want to assign another value for A, the following syntax will do:
+	(*)	A = <Expression>
+		Please note that spaces between A, '=' and the expression are Mandatory (for the current release)
+		But spaces In The Expression Are Not
+		For example: We'll assume that the value of A, B, and C are respectively [1, 2], [3, 4], and [5, 6]
+		
+			A = B+C 	(This will result in value of A to be [8, 10]. Try "show A" to confirm that)
+			A = -B-(C+B)	('A' will be [-11, -14])
+		
+		Multiplications are also available. Let A, B, C be 2x2 matrices:
+			
+			A = B*C
+			A = A*(B*C)((B+C)(B-C))	
+
+		I hope these examples have given you some slight idea about how to calculate using Lina
+	
+
+	Exit the application:
+	(*)	exit [Your goodbye speech here] 
+	Your goodbye speech will be known to no one. So feel free to say anything!

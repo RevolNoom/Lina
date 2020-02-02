@@ -257,7 +257,7 @@ Matrix<_Type> operator+(const Matrix<_Type>& M)
 template<typename _Type>
 Matrix<_Type> operator-(const Matrix<_Type>& M)
 {
-    return M * (-1);
+    return M * _Type(-1);
 }
 
 

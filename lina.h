@@ -10,7 +10,16 @@
 /*
     Future updates:
     +) Create more than one matrix with keyword Create
+    +) Keyword Name: used with show to show only matrices names
 
+    +) Change() to change more matrices at a time and change language
+                Change matrix size
+
+    +) Fraction input format 
+
+    +) Calculate() remade with inclusion of identity matrix
+                   can distinguish many expressions inside one string
+    +) GetCommand(): Calculating matrices will find the assignment sign anywhere in the arguments
 */
 
 
@@ -24,10 +33,15 @@
 #include "matrix.h"
 #include "language.h"
 #include <regex>
+#include <unordered_set>
+
 
 class Lina
 {
 private:
+
+    std::unordered_set<std::string> _Keywords;
+
     std::unordered_map<std::string, Matrix<Fraction>> _Matrices;
 
     //Map a command with a corresponding value
@@ -65,7 +79,7 @@ public:
 
     int ChangeLanguage(std::vector<std::string> & arguments);
 
-    int Help(std::vector<std::string> & arguments);
+    int Help(std::vector<std::string> & arguments) const;
 
     /*
         Create a matrix with a given size
@@ -77,20 +91,30 @@ public:
         then the matrix will have size 0x0
 
         For example: 
-            Matrix 3x4
-            Matrix 3 x 4
-            Matrix 3 4
-            Matrix
+            create Matrix 3x4
+            create Matrix 3 x 4
+            create Matrix 3 4
+            create Matrix
+
+        Any superfluous arguments, or lack of numbers
+        and the command is treated invalid
     */
     int Create(std::vector<std::string> & arguments);
 
-    int Calculate(std::vector<std::string> & arguments);
+    /*
+        Change can be used for many purpose
+        +) Change the application language
+        +) Change the name of a matrix
+        +) Change the value of a row, column or a whole matrix
+    */
+    int Change(std::vector<std::string> & arguments);
 
-    int Show(std::vector<std::string> & arguments);
+    int Show(std::vector<std::string> & arguments) const;
 
     int Exit(std::vector<std::string> & arguments);
 
-protected:
+//protected:
+public:
     /*
         Test a name to see whether it's fit to be a matrix name
         A name must satisfy these condition to be allowed:
@@ -101,9 +125,16 @@ protected:
         +) Does not begin with a digit
         +) It does not collide with a KEYWORD, or name of an Already Existing Matrix
     */
-    bool IsValidMatrixName(std::string name);
+    bool IsValidMatrixName(std::string name) const;
 
+    Matrix<Fraction> Calculate(const std::string &expression) const;
 
+    bool IsMatrix(std::string name) const;
+
+    bool IsCommand(std::string name) const;
+
+    bool IsKeyword(std::string name) const;
 };
 
+size_t FindMatchingParentheses(const std::string &str);
 #endif  /* LINA_H */

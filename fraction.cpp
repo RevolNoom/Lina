@@ -265,31 +265,29 @@ bool operator<=(long long a, Fraction f)
 }
 
 
-//This works for std::cin only
+/*
+    Grab a fraction in the following format:
+
+    +) A single integer
+        E.g.:   1 10 20 30
+    +) Two integers separated by a slash "/".
+        They must be "glued" to the slash
+        E.g:    1/1     30/7    1000/50
+            
+        FALSE FORMAT:   1 /2    2/ 3    2 / 3
+*/
 std::istream& operator>>(std::istream& is, Fraction& f)
 {   
     is>>f._Numerator;
-
-    char input;
-
-    while (is>>std::noskipws>>input)
-    {
-        if (input=='\n')
-            return is;
-
-        else if (input=='/')
+    if (is.peek()=='/') 
+    {    
+        is.ignore(1);
+        if (!std::isdigit(is.peek()))
         {
-            while(is>>std::noskipws>>input)
-                if (input=='\n')
-                    throw(Mexception("False input format."));
-                else if (std::isdigit(input))
-                {
-                    is.unget();
-                    is>>f._Denominator;
-                    return is;
-                }
-
+            is.setstate(is.failbit);
+            return is;
         }
+        is>>f._Denominator;
     }
     return is;
 }
