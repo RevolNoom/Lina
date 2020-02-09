@@ -1,7 +1,6 @@
 /*
     In this file lies the core features of Lina
     They are:
-    +) Application start up
     +) User's commands getter
     +) Language option (To be updated)
     +) Help display
@@ -55,61 +54,28 @@ int Lina::GetCommand()
     std::cout<<"\nWhat would you like to do? \n"
              <<"Type \"help\" for a list of commands to use.\n";
 
-    std::stringstream ss;
-    std::string temp;
-    std::getline(std::cin, temp);
-    ss<<temp;
-    
-    /*
-        'arguments' is an array of string and is guaranteed that:
-        +) The first element is a command name or matrix name
-        +) Every elements do not contain space
-        +) There's no null string argument ("")
-    */
-    std::vector<std::string> arguments;
-    while (!ss.eof())
-    {
-        arguments.push_back(std::string(""));
-        ss>>arguments.back();
-        if (!ss.good())
-        {
-            ss.clear();
-            ss.ignore(32767, '\n');
-        }
-    }
-    while (arguments.back()==std::string(""))
-        arguments.pop_back();
-    
-    //If the first thing the user gives us is a matrix name
-    //Then we need to calculate something
-    if (IsMatrix(arguments[0]))
-    {
-        if (arguments[1]!="=")
-            throw("We don't support that right now. Please come back later");
+    std::string input;
+    std::getline(std::cin, input);
 
-        std::string arg;
-        for (int iii=2; iii<arguments.size(); ++iii)
-            arg+=arguments[iii];
+    std::stringstream ss(input);
+    std::string CommandName;
+    ss>>CommandName;
+    // std::cout<<"CommandName: "<<CommandName<<"\n";
 
-        _Matrices[arguments[0]] = Calculate(arg);
-        return CALCULATE;
-    }
-
-    /*
-        If the first thing we get is not a matrix
-        Then it's a command
-        Find it, and then execute it
-        If it's not, well then, throw an error
-    */
-    std::transform(arguments[0].begin(), 
-                    arguments[0].end(), 
-                    arguments[0].begin(), 
+    std::transform(CommandName.begin(), 
+                    CommandName.end(), 
+                    CommandName.begin(), 
                     (int (*)(int)) std::tolower);
 
-    if (!IsCommand(arguments[0]))
-        throw(Mexception("There's no command available with keyword \"" + arguments[0] + "\"."));
+    if (!IsCommand(CommandName))
+        throw(Mexception("There's no command available with keyword \"" + CommandName + "\"."));
 
-    return _Commands[arguments[0]](arguments);
+
+    std::string Arguments;
+    std::getline(ss, Arguments);
+
+    // std::cout<<"Arguments: "<<Arguments<<"\n";
+    return _Commands[CommandName](BreakExpressions(Arguments, IsComma));
 }
 
 
@@ -139,7 +105,7 @@ int Lina::ChangeLanguage()
 
 
 
-int Lina::Help(std::vector<std::string> &arguments) const
+int Lina::Help(const std::vector<std::string> &arguments) const
 {
     std::string fileName("en_help.txt");
     std::fstream help;
@@ -152,9 +118,7 @@ int Lina::Help(std::vector<std::string> &arguments) const
     std::string line;
     if (help.is_open())
         while (std::getline(help, line))
-        {
             std::cout<<line<<"\n";
-        }
     else 
         std::cerr<<"Error opening file \""<<fileName<<"\"\n";
 
@@ -164,67 +128,109 @@ int Lina::Help(std::vector<std::string> &arguments) const
 
 
 
-int Lina::Create(std::vector<std::string> &arguments)
+int Lina::Create(const std::vector<std::string> &arguments)
 {
-    if (arguments.size()==1)
+    if (arguments.size()==0)
         throw (Mexception("You gave me no argument :/ Why?"));
 
+    /*
+        Matrix naming rules:
+        +) Only contains underscore "_" , latin letters, numbers
+        +) First character is not a digit 
+        In a Create command argument, MatrixName is mandatory
+    */
+    std::string MatrixName("([_a-zA-Z][_\\w\\d]*)");
 
-    if (!IsValidMatrixName(arguments[1]))
-        throw(Mexception("The name \""+arguments[1]+"\" is already reserved. Please come up with another one."));
-
-    // At this point, there's at least 2 arguments that have been given
+    /*
+        This part of argument is optional, hence the "?" at the end
+    */
+    std::string MatrixSize("(\\s+(\\d+)\\s*x?\\s*(\\d+)\\s*)?");
     
-    // The user just want to create a default matrix for future use.
-    // And that would be a zero matrix
-    if (arguments.size()==2)
+    std::regex  Rgx( MatrixName + MatrixSize);
+    std::smatch ArgumentParts;
+
+    for (auto &Arg: arguments)
     {
-        _Matrices.insert({arguments[1], 
-                            Matrix<Fraction>(0, 0)});
-        return CREATE;
+        if (!std::regex_match(Arg, ArgumentParts, Rgx))
+        {
+            std::cerr<<"Cannot create matrix with argument: \""<<Arg<<"\".\n";
+            continue;
+        }
+
+        //  Check if the size of the matrix is grabbed
+        if (ArgumentParts[2].str().size())
+        {
+            _Matrices.insert({ArgumentParts[1].str(),
+                                Matrix<Fraction>(std::stoll(ArgumentParts[3].str()),
+                                                std::stoll(ArgumentParts[4].str()))
+                            });
+            std::cout<<"Matrix "
+                        <<ArgumentParts[1].str() + " "
+                        <<ArgumentParts[3].str() + "x" + ArgumentParts[4].str()
+                        <<" has been created\n";
+        }
+
+        // This matrix has no size argument
+        // Create a default matrix
+        else
+        {
+            _Matrices.insert({ArgumentParts[1].str(), Matrix<Fraction>(0, 0)});
+            std::cout<<"Matrix "
+                        <<ArgumentParts[1].str()
+                        <<" 0x0 has been created\n";
+        }
     }
-
-    // Have i ever tell you how much i love regex?
-    std::string input;
-    std::smatch sm;
-    for (int iii=2; iii<arguments.size(); ++iii)
-        input+=arguments[iii]+" ";
     
-  
-    if (!std::regex_match(input, sm, std::regex("\\s*(\\d+)\\s*x?\\s*(\\d+)\\s*")))
-        throw (Mexception("There might have been some mistakes. Could you try again?"));
 
-    _Matrices.insert({arguments[1], 
-                        Matrix<Fraction>(
-                            std::stoi(sm[1].str()), 
-                            std::stoi(sm[2].str()))
-                    });
     return CREATE;
 }
 
 
-int Lina::Change(std::vector<std::string> & arguments)
+int Lina::Change(const std::vector<std::string> &arguments)
 {
     
-    if (arguments.size()==1)
+    if (arguments.size()==0)
         throw(Mexception("Ummmm... What am i supposed to change? :/"));
-    if (IsMatrix(arguments[1]))
+    
+
+    for (auto &Arg: arguments)
     {
-        if (arguments.size()==2)
+        std::string MatrixName;
+        int assignmentSign=Arg.find('=');
+
+        MatrixName = (assignmentSign!=std::string::npos) ?
+                        Arg.substr(0, assignmentSign) :     
+                            Arg.substr(0, Arg.find_first_of(' '));
+        
+        if (!IsMatrix(MatrixName))
+            throw (Mexception(MatrixName + std::string(" is not a matrix name.")));
+
+        std::cout<<"Modifying matrix "<<MatrixName<<": \n";
+
+        /*
+            Change the matrix by assignment to an expression
+        */
+        if (assignmentSign!=std::string::npos)
         {
-            std::cin>>_Matrices[arguments[1]];
+            _Matrices[MatrixName] = Calculate(MatrixName.substr(assignmentSign+1));
         }
+        /*
+            Change the matrix by keyboard input
+        */
         else
-            throw("Too many arguments: " + std::to_string(arguments.size()));
-        std::cout<<"\nYour matrix \""<<arguments[1]<<"\" after changing:\n"<<_Matrices[arguments[1]];
-        std::cin.ignore(10000, '\n');
+        {
+            //In case the user wants to change size also
+            //We have to recreate this matrix
+            if (MatrixName==Arg)
+            {
+                std::cin>>_Matrices[MatrixName];
+                std::cin.ignore(10000, '\n');
+            }
+        }
+        
+        std::cout<<"\nYour matrix \""<<MatrixName<<"\" after modification:\n"<<_Matrices[MatrixName];
     }
-    else if (IsKeyword(arguments[1]))
-    {
-        throw(Mexception("Pretty sorry, you can't change a command."));
-    }
-    else 
-        throw(Mexception("That's not a matrix name. Could you try again?"));
+    
     return CHANGE;
 }
 
@@ -233,38 +239,41 @@ int Lina::Change(std::vector<std::string> & arguments)
 
 
 
-int Lina::Show(std::vector<std::string> &arguments) const
+int Lina::Show(const std::vector<std::string> &arguments) const
 {
     //If the user only specify SHOW as their command
     //Then we'll show them ALL the matrix
-    if (arguments.size()==1)
+    if (arguments.size()==0)
+    {
         for (auto &pair: _Matrices)
-        {
             std::cout<<"Matrix "<<pair.first<<": \n"<<pair.second<<"\n\n";
-        }
+        return SHOW;
+    }
+    
+    //If option --info is given, print matrices names and size
+    if (arguments.size()==1 && arguments[1]=="--info")
+    {
+        for (auto &pair: _Matrices)
+            std::cout<<"Matrix \""<<pair.first<<"\" "
+                        <<pair.second.Rows()<<"x"<<pair.second.Columns()
+                        <<"\n";
+        return SHOW;
+    }
 
-    else 
-        for (int iii=1; iii<arguments.size(); ++iii)
-        {
-            if (_Matrices.find(arguments[iii])==_Matrices.end())
-                throw(Mexception("There's no matrix with name "+arguments[iii]));
-            std::cout<<"Matrix "<<arguments[iii]<<": \n"<<_Matrices.at(arguments[iii])<<"\n";
-        }
+    //No option is given, or given but we don't understand
+    //Print name/expression and result
+    for (auto &Arg: arguments)
+        std::cout<<"Matrix of \""<<Arg
+                    <<"\":\n"<<Calculate(Arg);
+        
     return SHOW;
 }
 
 
 
 
-int Lina::Exit(std::vector<std::string> &arguments)
+int Lina::Exit(const std::vector<std::string> &arguments) const
 {
     std::cout<<"See you again!\n";
     return EXIT;
 }
-
-
-
-
-
-
-

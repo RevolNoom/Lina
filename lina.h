@@ -9,17 +9,12 @@
 */
 /*
     Future updates:
-    +) Create more than one matrix with keyword Create
-    +) Keyword Name: used with show to show only matrices names
-
-    +) Change() to change more matrices at a time and change language
-                Change matrix size
-
-    +) Fraction input format 
+    +) Change() to change language
+              >>>  Change matrix size <<< 226 lina.cpp
+                
 
     +) Calculate() remade with inclusion of identity matrix
-                   can distinguish many expressions inside one string
-    +) GetCommand(): Calculating matrices will find the assignment sign anywhere in the arguments
+                    against null param
 */
 
 
@@ -47,7 +42,7 @@ private:
     //Map a command with a corresponding value
     std::unordered_map<std::string, 
                         std::function<
-                            int(std::vector<std::string> &
+                            int(const std::vector<std::string> &
                                         )>> 
                                         _Commands;
 
@@ -77,9 +72,9 @@ public:
      */
     int GetCommand();
 
-    int ChangeLanguage(std::vector<std::string> & arguments);
+    int ChangeLanguage(const std::vector<std::string> & arguments);
 
-    int Help(std::vector<std::string> & arguments) const;
+    int Help(const std::vector<std::string> & arguments) const;
 
     /*
         Create a matrix with a given size
@@ -99,7 +94,7 @@ public:
         Any superfluous arguments, or lack of numbers
         and the command is treated invalid
     */
-    int Create(std::vector<std::string> & arguments);
+    int Create(const std::vector<std::string> & arguments);
 
     /*
         Change can be used for many purpose
@@ -107,11 +102,11 @@ public:
         +) Change the name of a matrix
         +) Change the value of a row, column or a whole matrix
     */
-    int Change(std::vector<std::string> & arguments);
+    int Change(const std::vector<std::string> & arguments);
 
-    int Show(std::vector<std::string> & arguments) const;
+    int Show(const std::vector<std::string> & arguments) const;
 
-    int Exit(std::vector<std::string> & arguments);
+    int Exit(const std::vector<std::string> & arguments) const;
 
 //protected:
 public:
@@ -127,14 +122,59 @@ public:
     */
     bool IsValidMatrixName(std::string name) const;
 
+    /*
+        @brief  Calculate an expression that contains names of the matrix this application know
+        @param  The expression you want to calculate
+        @return The resulting matrix
+    */
     Matrix<Fraction> Calculate(const std::string &expression) const;
 
+    
+    /*
+        @brief  Test a name to see whether it has been created before
+        @param  The matrix name
+        @return True if the matrix has been created, false otherwise
+    */
     bool IsMatrix(std::string name) const;
 
+    /*
+        @brief  Test a word to see whether it's a command keyword
+        @param  The word to test
+        @return True if that word (in case - INSENSITIVE) is a command. 
+                False otherwise
+    */
     bool IsCommand(std::string name) const;
-
+    
+    /*
+        @brief  Test a word to see whether it conflicts with Lina's mathematic function names
+        @param  The word to test
+        @return True if that word (in case - INSENSITIVE) is a keyword. 
+                False otherwise
+    */
     bool IsKeyword(std::string name) const;
 };
 
+/*
+    @brief  Look for the leftmost opening parentheses, then find its corresponding closing one
+    @param  The string in need to find the parentheses
+    @return Index of the closing parenthesis of the leftmost opening parenthesis
+            -1 if there's no valid parentheses group
+*/
 size_t FindMatchingParentheses(const std::string &str);
+
+/*
+        @brief  Break a string into many substrings, based on the delimiter
+        @param  Expression: The string contains expressions
+        @param  delimPred:  A function which return true if a given character is considered delimiter.
+        @return An array contains broken substrings in @param, from left to right
+                All whitespaces at the beginning and the end of each expressions are trimmed 
+*/    
+std::vector<std::string> BreakExpressions(const std::string &Expression, int (*delimPred)(int c) );
+
+/*
+    Return true if c==','
+*/
+int IsComma(int c);
+
+
 #endif  /* LINA_H */

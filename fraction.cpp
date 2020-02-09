@@ -278,14 +278,19 @@ bool operator<=(long long a, Fraction f)
 */
 std::istream& operator>>(std::istream& is, Fraction& f)
 {   
-    is>>f._Numerator;
+    if (!(is>>f._Numerator))
+    {
+        is.clear();
+        is.ignore(32767, '\n');
+        throw(Mexception("Fraction numerator input failed"));
+    }
     if (is.peek()=='/') 
     {    
         is.ignore(1);
         if (!std::isdigit(is.peek()))
         {
-            is.setstate(is.failbit);
-            return is;
+            f._Numerator=0;
+            throw(Mexception("Fraction denominator input failed"));
         }
         is>>f._Denominator;
     }

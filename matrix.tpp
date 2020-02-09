@@ -315,12 +315,13 @@ bool Matrix<_Type>::IsInvertible() const
 template<typename _Type>
 std::istream& operator>>(std::istream& IS, Matrix<_Type>& M)
 {
-    for (size_t iii=0; iii<M.Rows(); ++iii)
+    Matrix<_Type> tempMatrix(M.Rows(), M.Columns());
+    for (size_t iii=0; iii<tempMatrix.Rows(); ++iii)
     {
         std::cout<<"Enter row "<<iii<<": ";
-        for (size_t jjj=0; jjj<M.Columns(); ++jjj)
+        for (size_t jjj=0; jjj<tempMatrix.Columns(); ++jjj)
         {
-            IS>>M.at(iii, jjj);
+            IS>>tempMatrix.at(iii, jjj);
         }
 
         while (IS.peek()!='\n')
@@ -331,5 +332,53 @@ std::istream& operator>>(std::istream& IS, Matrix<_Type>& M)
             IS.ignore(1);
         }
     }   
+    M=tempMatrix;
     return IS;
+}
+
+//Represent the matrix by a board
+template<typename _Type>
+std::ostream& operator<<(std::ostream& OS, const Matrix<_Type> &M)
+{
+
+    //Find the length of the longest element
+    //So that we can format the matrix according to it 
+    long long LongestLength(0);
+    
+    //This matrix represents the length of each elements
+    Matrix<size_t> ElementLength(M.Rows(), M.Columns());
+
+    for (long long row=0; row<M.Rows(); ++row)
+        for(long long col=0; col<M.Columns(); ++col)
+        {
+            std::stringstream ss(M.at(row, col));
+            ElementLength.at(row, col)=ss.str().length();
+            if (ElementLength.at(row, col)>LongestLength)
+                LongestLength=ElementLength.at(row, col);
+        }
+
+    //Draw the matrix
+    for (long long row=0; row<M.Rows()*2+1; ++row)
+    {
+        if (row%2) //This is an element-displaying line
+        {
+            std::cout<<'|';
+            for (long long col=0; col<M.Columns(); ++col)
+                OS<<std::string(
+                                LongestLength - 
+                                ElementLength.at(row/2, col)
+                                , ' ')
+                    <<M.at(row/2, col)
+                        <<'|';
+        }
+        else      //This is a horizontal border
+        {
+            OS<<std::string("+");
+            std::string border=std::string(LongestLength, '-') + std::string("+");
+            for (long long col=0; col<M.Columns(); ++col)
+                OS<<border;
+        }
+        OS<<"\n";
+    }
+    return OS;
 }

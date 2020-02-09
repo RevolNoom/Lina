@@ -1,20 +1,62 @@
 	Create a matrix:
-	(*)	create <Matrix Name> [<Row> [x] <Column>]
+	(*)	create <Matrix Name> [<Row> [x] <Column>] [, <Another matrix>]
 		This will create a matrix with the given name and specified size (if given) or zero matrix (if not)
 		Your matrix name must not collide with any of the program's keywords or any of your already existing matrix
+		To create a matrix, its name must follow these conventions:
+			+)	It contains only underscore "_", english characters (a, b, c,...), and digits
+			+)	The first character may not be a digit
+
 		For example:
-			create ABC		# Will create matrix ABC with size 0x0
-			create ABC 1 9		# Create matrix ABC with 1 row and 9 columns
-			create ABC 1x9		# Is the same as the last, using letter 'x' is optional
+			create ABC			
+			# Will create matrix ABC with size 0x0
+			
+			create _ABC 1 9		
+			# Create matrix _ABC with 1 row and 9 columns
+			
+			create _ABC 1x9		
+			# Is the same as the last, using letter 'x' is optional
+
+			create 1ABC			
+			# WRONG. The first character is a number
+
+		You can also create many matrices at a time, with each new matrix be separated with ","
+			create ABC, _ABC 1 9, DEF 1x9 
+	
 
 	Display matrices:
-	(*) 	show [Matrix name]
-		This command will display the matricx you want to see, or display all matrices you have created if you give it no name
+	(*) 	show [[--info] | [<Expressions>]]
+		This command will display the matricex you want to see, or display all matrices you have created if you give it no name
+		You can tell Show to display many matrices at a time, with each matrix separated by ","
 		For example:
-			show			# Display ALL matrices
-			show ABC		# Display matrix ABC
+			show			
+			# Display ALL matrices
+			
+			show ABC		
+			# Display matrix ABC
+			
+			show ABC+DEF	
+			# Display the sum of ABC+DEF
 
-	Matrix calculation using this application:
+			show ABC+DEF, (ABC+DEF)*ABC
+			# Can't you guess?
+
+		If you don't want to print the matrices content, but only their names and size
+		You can use the option --info:
+	(*)		show --info
+
+
+
+	Changing matrices:
+	(*)		change <Matrix Names>
+		This command let you change your matrix from your keyboard input
+		Simply specify the matrix name (or many, separated by colon) to start changing the matrix
+		For example:
+			change ABC 
+			change ABC, DEF, GHI
+		
+
+
+	Matrices calculation:
 		Let's suppose you have 3 matrices: A, B, C of the same size (calculation of different sizes matrices are available,
 		but for the sake of this tutorial, I'll keep it simple).
 		If you want to assign another value for A, the following syntax will do:
