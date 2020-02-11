@@ -10,9 +10,6 @@
 /*
     Future updates:
     +) Change() to change language
-              >>>  Change matrix size <<< 226 lina.cpp
-                
-
     +) Calculate() remade with inclusion of identity matrix
                     against null param
 */
@@ -108,8 +105,8 @@ public:
 
     int Exit(const std::vector<std::string> & arguments) const;
 
-//protected:
-public:
+protected:
+//public:
     /*
         Test a name to see whether it's fit to be a matrix name
         A name must satisfy these condition to be allowed:

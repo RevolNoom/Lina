@@ -47,12 +47,19 @@
 
 
 	Changing matrices:
-	(*)		change <Matrix Names>
+	(*)		change <Matrix Names> [Rows x Columns]
 		This command let you change your matrix from your keyboard input
+			or by an already created matrix
 		Simply specify the matrix name (or many, separated by colon) to start changing the matrix
 		For example:
+			# These commands ask for your input
 			change ABC 
 			change ABC, DEF, GHI
+			change ABC 1x2			# Change the size of the matrix, and then ask for input
+		
+		If you want to assign the value of DEF or an expression to matrix ABC:
+			change ABC=DEF
+			change ABC=DEF+DEF*DEF 
 		
 
 
@@ -68,11 +75,13 @@
 			A = B+C 	(This will result in value of A to be [8, 10]. Try "show A" to confirm that)
 			A = -B-(C+B)	('A' will be [-11, -14])
 		
-		Multiplications are also available. Let A, B, C be 2x2 matrices:
+		Multiplications between matrices are also available. Let A, B, C be 2x2 matrices:
 			
 			A = B*C
 			A = A*(B*C)((B+C)(B-C))	
 
+		But multiplications with numbers aren't supported right now. So take care!
+		Things might break if you try magic numbers.
 		I hope these examples have given you some slight idea about how to calculate using Lina
 	
 

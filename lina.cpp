@@ -212,20 +212,31 @@ int Lina::Change(const std::vector<std::string> &arguments)
         */
         if (assignmentSign!=std::string::npos)
         {
-            _Matrices[MatrixName] = Calculate(MatrixName.substr(assignmentSign+1));
+            _Matrices[MatrixName] = Calculate(Arg.substr(assignmentSign+1));
         }
         /*
             Change the matrix by keyboard input
         */
         else
         {
-            //In case the user wants to change size also
-            //We have to recreate this matrix
-            if (MatrixName==Arg)
+            //This command contains size argument
+            //Find the matrix name, and get the left over size argument
+            if (MatrixName!=Arg)
             {
-                std::cin>>_Matrices[MatrixName];
-                std::cin.ignore(10000, '\n');
-            }
+                auto SubArg=BreakExpressions(Arg, std::isspace);
+                std::string size;
+                for (int iii=1; iii<SubArg.size(); ++iii)
+                    size+=SubArg[iii] + " ";
+                
+                std::smatch sm;
+                //Get numbers of rows and columns
+                if (!std::regex_match(size, sm, std::regex("\\s*(\\d+)\\s*x?\\s*(\\d+)\\s*")))
+                    throw(Mexception("Invalid arguments: " + Arg));
+                
+                _Matrices[MatrixName]=Matrix<Fraction>(std::stoll(sm[1].str()), std::stoll(sm[2].str()));
+            } 
+            std::cin>>_Matrices[MatrixName];
+            std::cin.ignore(10000, '\n');
         }
         
         std::cout<<"\nYour matrix \""<<MatrixName<<"\" after modification:\n"<<_Matrices[MatrixName];
