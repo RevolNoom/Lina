@@ -10,8 +10,8 @@
 /*
     Future updates:
     +) Change() to change language
-    +) Calculate() remade with inclusion of identity matrix
-                    against null param
+    +) Read Makefile and then update g++ with -std=c++17 for std::variant
+    +_ Calculate() remade with inclusion of identity matrix
 */
 
 
@@ -26,6 +26,7 @@
 #include "language.h"
 #include <regex>
 #include <unordered_set>
+//#include <variant>
 
 
 class Lina
@@ -149,6 +150,19 @@ protected:
                 False otherwise
     */
     bool IsKeyword(std::string name) const;
+
+    /*
+        Actually, Calculate() is only a wrapper function.
+        What really happened in Calculate() starts her.
+        RealCalculate() deals with recursive calls, identity matrices,...
+        All the things you shouldn't worry about
+        @param 
+                begin: The beginning position of the position you want to calculate
+                end:    The past-the-end position of the said expression
+        @return
+                The first factor in the expression.
+    */
+    //std::variant<Matrix<Fraction>, Fraction> RealCalculate(const std::string &expression, size_t begin, size_t end) const;
 };
 
 /*
@@ -167,7 +181,7 @@ size_t FindMatchingParentheses(const std::string &str);
                 All whitespaces at the beginning and the end of each expressions are trimmed 
 */    
 std::vector<std::string> BreakExpressions(const std::string &Expression, int (*delimPred)(int c) );
-
+std::string TrimWhiteSpace(const std::string &str);
 /*
     Return true if c==','
 */

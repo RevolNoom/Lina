@@ -98,18 +98,23 @@ std::vector<std::string> BreakExpressions(const std::string &Expression, int (*d
 
     //Trim whitespace
     for (auto &s: result)
-    {
-        int ws=0;
-        while (std::isspace(s[ws]))
-            ++ws;
-        s=s.substr(ws);
-
-        while (std::isspace(s.back()))
-            s.pop_back();
-    }
+        s= TrimWhiteSpace(s);
     return result;
 }
 
+std::string TrimWhiteSpace(const std::string &str)
+{
+    int begin(0), end(str.size()-1);
+    while (end>=begin && 
+            std::isspace(str[end]))
+        --end;
+
+    while (begin<=end && 
+           std::isspace(str[begin]))
+        ++begin;
+
+    return str.substr(begin, end-begin+1);
+}
 
 int IsComma(int c)
 {

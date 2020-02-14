@@ -8,9 +8,8 @@
 
 int main()
 {   
-
-    Lina lina;
-    lina.Start();
+   Lina lina;
+   lina.Start();
     
     
     return 0;   

@@ -192,49 +192,50 @@ int Lina::Change(const std::vector<std::string> &arguments)
     if (arguments.size()==0)
         throw(Mexception("Ummmm... What am i supposed to change? :/"));
     
+    std::string MatrixName;
 
     for (auto &Arg: arguments)
     {
-        std::string MatrixName;
-        int assignmentSign=Arg.find('=');
+        if (Arg==std::string(""))
+            continue;
 
-        MatrixName = (assignmentSign!=std::string::npos) ?
-                        Arg.substr(0, assignmentSign) :     
-                            Arg.substr(0, Arg.find_first_of(' '));
+        auto Verses=BreakExpressions(Arg, [](int c)->int{return c== '=';});
         
-        if (!IsMatrix(MatrixName))
-            throw (Mexception(MatrixName + std::string(" is not a matrix name.")));
-
-        std::cout<<"Modifying matrix "<<MatrixName<<": \n";
+        if (Verses.size()>2)
+            throw (Mexception("Too many assignment: " + Arg));
 
         /*
             Change the matrix by assignment to an expression
         */
-        if (assignmentSign!=std::string::npos)
+        if (Verses.size()==2)
         {
-            _Matrices[MatrixName] = Calculate(Arg.substr(assignmentSign+1));
+            if (!IsMatrix(Verses[0]))
+                throw (Mexception("\"" + Verses[0] + std::string("\" is not a matrix name.")));
+            MatrixName=Verses[0];
+            _Matrices[MatrixName] = Calculate(Verses[1]);
         }
         /*
             Change the matrix by keyboard input
         */
         else
         {
-            //This command contains size argument
-            //Find the matrix name, and get the left over size argument
-            if (MatrixName!=Arg)
+            std::smatch sm;
+
+            //Search for matrix name and size (if there's any)
+            if (!std::regex_match(Arg, sm, 
+                    std::regex("([_a-zA-Z][_\\w\\d]*)(\\s+(\\d+)\\s*x?\\s*(\\d+)\\s*)?")))
+                throw(Mexception("Invalid arguments: " + Arg));
+
+            /*
+            for (int iii=0; iii<sm.size(); ++iii)
             {
-                auto SubArg=BreakExpressions(Arg, std::isspace);
-                std::string size;
-                for (int iii=1; iii<SubArg.size(); ++iii)
-                    size+=SubArg[iii] + " ";
-                
-                std::smatch sm;
-                //Get numbers of rows and columns
-                if (!std::regex_match(size, sm, std::regex("\\s*(\\d+)\\s*x?\\s*(\\d+)\\s*")))
-                    throw(Mexception("Invalid arguments: " + Arg));
-                
-                _Matrices[MatrixName]=Matrix<Fraction>(std::stoll(sm[1].str()), std::stoll(sm[2].str()));
-            } 
+                std::cout<<"sm["<<iii<<"]: "<<sm[iii].str()<<"\n";
+            } */
+
+            MatrixName=sm[1].str();
+            if (sm[3].str()!=std::string(""))
+                _Matrices[MatrixName]=Matrix<Fraction>(std::stoll(sm[3].str()), std::stoll(sm[4].str()));
+             
             std::cin>>_Matrices[MatrixName];
             std::cin.ignore(10000, '\n');
         }
@@ -260,23 +261,31 @@ int Lina::Show(const std::vector<std::string> &arguments) const
             std::cout<<"Matrix "<<pair.first<<": \n"<<pair.second<<"\n\n";
         return SHOW;
     }
-    
+
     //If option --info is given, print matrices names and size
-    if (arguments.size()==1 && arguments[1]=="--info")
+    if (arguments.size()==1 && arguments[0]=="--info")
     {
         for (auto &pair: _Matrices)
-            std::cout<<"Matrix \""<<pair.first<<"\" "
+            std::cout<<"Matrix \""<<pair.first<<"\" is a "
                         <<pair.second.Rows()<<"x"<<pair.second.Columns()
-                        <<"\n";
+                        <<" matrix\n";
         return SHOW;
     }
 
-    //No option is given, or given but we don't understand
     //Print name/expression and result
     for (auto &Arg: arguments)
-        std::cout<<"Matrix of \""<<Arg
-                    <<"\":\n"<<Calculate(Arg);
-        
+    {
+        auto ArgumentOption = BreakExpressions(Arg, std::isspace);
+        if (ArgumentOption[0]=="--info")
+        {
+            auto Expression=Arg.substr(6);
+            auto Matrix = Calculate(Expression);
+            std::cout<<"Matrix \""<<Expression<<"\" is a "
+                        <<Matrix.Rows()<<"x"<<Matrix.Columns()<<" matrix.\n";
+        }
+        else
+            std::cout<<"Matrix \""<<Arg<<"\":\n"<<Calculate(Arg)<<"\n";  
+    }   
     return SHOW;
 }
 

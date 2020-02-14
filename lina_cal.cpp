@@ -147,6 +147,18 @@ Matrix<Fraction> Lina::Calculate(const std::string &Expression) const
 
     
    // There's no operator here, so this's the end of the Expression
-   return Current_Matrix;
+   return Current_Matrix;   
 }
 
+
+/*  T O  B E  U P D A T E D
+
+std::variant<Matrix<Fraction>, Fraction> Lina::RealCalculate(const std::string &Expression, size_t begin, size_t end) const
+{
+    //These codes will be swapped to inside Calculate()
+    //And what's in Calculate() will end up in here
+    auto Result = RealCalculate(Expression, 0, Expression.size());
+    if (std::holds_alternative<Matrix<Fraction>>(Result))
+        return std::get<Matrix<Fraction>>(Result);
+} 
+*/
