@@ -1,0 +1,6 @@
+<Showing help>
+		help [--list | --all | Command Names]
+	+) If given nothing, show this help.
+	+) With --list, Help lists all available commands.
+	+) With --all, Help lists all available command and instructions
+	+) For each given command name, Help will show instructions on how to use it.

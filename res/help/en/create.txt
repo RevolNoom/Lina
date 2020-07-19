@@ -1,0 +1,6 @@
+<Create Matrices>
+		create <Matrix Name> [Rows (x) Columns]
+	+) Create matrix ABC with 3 rows and 4 columns:
+		create ABC 3 x 4
+		create ABC 3 4
+	+) If no size is given, ABC will be zero matrix by default

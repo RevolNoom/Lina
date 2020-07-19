@@ -5,7 +5,7 @@ MATRIX = matrix.h matrix.tpp matrix2.tpp block.h block.tpp block2.tpp mexception
 G++ = g++ -std=c++17
 
 Lina.exe: $(OBJECTS)
-	$(G++)  $(OBJECTS) -o Lina.exe && make clean 
+	$(G++)  $(OBJECTS) -o Lina.exe
 	
 main.o: $(LINA_O) fraction.o
 	$(G++) -c main.cpp 
@@ -18,10 +18,13 @@ $(LINA_O): lina.h lina_util.h lina_util.tpp  $(LINA_CPP) $(MATRIX)
 	$(G++) -c $(LINA_CPP)
 
 
-.PHONY: clean
+.PHONY: clean tidy
 
 clean:
 	-rm $(OBJECTS)
+
+tidy:
+	$(G++)  $(OBJECTS) -o Lina.exe && make clean
 
 
 

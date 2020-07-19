@@ -5,6 +5,9 @@
 
 #include "lina.h"
 
+std::string Lina::BannerDir="res/LinaBanner.txt";
+std::string Lina::HelpDir="res/help/en/";
+
 template<typename Return_Type, typename ...Args_Type>
 int Lina::CreateUtility(const std::string &UtilName, 
                         Return_Type (Lina::*Fptr)(Args_Type...), 
@@ -15,7 +18,7 @@ int Lina::CreateUtility(const std::string &UtilName,
     if (_Keywords.find(UtilName)!=_Keywords.end())
         return 1;
 
-    _Commands.insert({UtilName, Lina_Utility<Return_Type, Args_Type...>
+    _Utility.insert({UtilName, Lina_Utility<Return_Type, Args_Type...>
                                         (UtilName, Fptr, HelpfilePath)
                     });
 
@@ -34,7 +37,7 @@ int Lina::CreateUtility(const std::string &UtilName,
     if (_Keywords.find(UtilName)!=_Keywords.end())
         return 1;
 
-    _Commands.insert({UtilName, Lina_Utility<Return_Type, Args_Type...>
+    _Utility.insert({UtilName, Lina_Utility<Return_Type, Args_Type...>
                                 (UtilName, Fptr, HelpfilePath)
 
                     });
@@ -51,8 +54,6 @@ Lina::Lina():_CurrentLanguage("EN-en")
     /*
         Binds keywords to functions
     */
-    std::string HelpDir("res/help/");
-
     CreateUtility(string("create"), &Lina::Create, string(HelpDir + "create.txt"));
 
     CreateUtility(string("help"), &Lina::Help, string(HelpDir + "help.txt"));

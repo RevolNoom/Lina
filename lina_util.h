@@ -17,21 +17,10 @@ class Lina;
 using namespace std;
 
 /*
-    This is a (BASE) wrapper class for each function in Lina.
-    The functions inside Lina maybe of different signatures, 
-
     Here's what it does:
     - Keeps track of the function name.
     - Can be invoked to perform its function to data inside Lina (using operator() )
     - Shows help, remember where the manual for its function is.
-
-    Because the invocation output is dependent on 
-        which Lina instance is called with it,
-        so the lifespan of this utility should not last longer
-        than the Lina it's tied to.
-    
-    In other words: Create the Utilities inside a Lina, 
-                and kill them when Lina dies
 */
 
 
@@ -88,6 +77,10 @@ public:
     // @return 0 if the manual is written successfully
     //          1 otherwise
     int GetHelp() const;
+
+    // Write to stdout the synopsis of the utility
+    // (2 first lines of each helpfile)
+    int GetHelpBrief() const;
 };
 
 #include "lina_util.tpp"

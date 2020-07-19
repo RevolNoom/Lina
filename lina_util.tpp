@@ -49,7 +49,7 @@ const string& Lina_Utility<Return_Type, Args_Type...>::Name() const
 template <typename Return_Type, typename ...Args_Type>
 int Lina_Utility<Return_Type, Args_Type...>::GetHelp() const
 {
-    std::fstream Helpfile(_Util_Name);
+    std::fstream Helpfile(_Util_Helpfile);
 
     if (!Helpfile.is_open())
     {
@@ -76,8 +76,31 @@ int Lina_Utility<Return_Type, Args_Type...>::GetHelp() const
                 }
             }
         }
+        std::cout<<"\n";
     }
     return 0;
 }
 
+template <typename Return_Type, typename ...Args_Type>
+int Lina_Utility<Return_Type, Args_Type...>::GetHelpBrief() const
+{
+    std::fstream Helpfile(_Util_Helpfile);
+
+    if (!Helpfile.is_open())
+    {
+        std::cout<<"Can't open help file: "<<_Util_Helpfile<<"\n";
+        return 1;
+    }
+
+    else
+    {
+        std::string Str("");
+        for (int iii=0; iii<2 && std::getline(Helpfile, Str); ++iii)
+        {
+                std::cout<<Str<<"\n";
+        }
+        std::cout<<"\n";
+    }
+    return 0;
+}
 

@@ -12,6 +12,7 @@
 
 #include "lina.h"
 
+
 enum CommandValues
 {
     QUIT,
@@ -27,7 +28,7 @@ enum CommandValues
 
 void Lina::Intro()
 {
-    std::fstream Banner(BANNER);
+    std::fstream Banner(Lina::BannerDir);
     if (!Banner.is_open()) 
     {
         std::cout<<"HEY! WHO STOLE OUR PRETTY BANNER? >:( \n";
@@ -112,7 +113,7 @@ int Lina::CallUtility(const string& Util_Name, const vector<string> &Args)
                 {
                     Util_Result = (this->*Util)(Args);
                 }
-                , _Commands[Util_Name]._Util_Function);
+                , _Utility[Util_Name]._Util_Function);
 
     return Util_Result;
 }
@@ -144,28 +145,33 @@ int Lina::ChangeLanguage()
 
 int Lina::Help(const std::vector<std::string> &arguments) const
 {
-    std::string fileName("en_help.txt");
-    std::fstream help;
+    if (arguments.size()==0)
+        _Utility.at("help").GetHelp();
+    
 
-    //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-    //I wrote this and then forgot what it does. I'm keeping it just in case...
-    //std::vector<bool> HelpNeeded(MAX_VALUE);
+    else if (arguments[0] == "--list" || arguments[0] == "--all")
+    {
+        bool IsAll(arguments[0]=="--all"? true : false);
 
-/*
-    if (_CurrentLanguage=="VN-vn")
-        fileName="vn_help.txt";
-*/
+        //If the user wants all, print everything
+        //No? So print out 2 first lines of each help file only
+        for (auto &u: _Utility)
+        {
+            if (IsAll)
+                u.second.GetHelp();
+            else 
+                u.second.GetHelpBrief();
+        }
+    }
 
-    help.open(fileName, std::ios::in);
-
-    std::string line;
-    if (help.is_open())
-        while (std::getline(help, line))
-            std::cout<<line<<"\n";
     else 
-        std::cerr<<"Error opening file \""<<fileName<<"\"\n";
-
-    help.close();
+        for (auto &a: arguments)
+        {
+            if (_Utility.find(a) != _Utility.end())
+                _Utility.at(a).GetHelp();
+            else 
+                std::cout<<"No such help file: "<<a<<"\n";
+        }
     return HELP;
 }
 
@@ -270,11 +276,17 @@ int Lina::Change(const std::vector<std::string> &arguments)
                 throw(Mexception("Invalid arguments: " + Arg));
 
             MatrixName=sm[1].str();
+
+            //See if the user wants to change matrix size or not
             if (sm[3].str()!=std::string(""))
-                _Matrices[MatrixName]=Matrix<Fraction>(std::stoll(sm[3].str()), std::stoll(sm[4].str()));
-             
-            std::cin>>_Matrices[MatrixName];
-            std::cin.ignore(10000, '\n');
+            {
+                //Create a buffer matrix to fallback on if things go wrong
+                Matrix<Fraction> New_Matrix(std::stoll(sm[3].str()), std::stoll(sm[4].str()));
+                std::cin>>New_Matrix;
+                _Matrices[MatrixName]=New_Matrix;
+            }
+            else
+                std::cin>>_Matrices[MatrixName];
         }
         
         std::cout<<"\nYour matrix \""<<MatrixName<<"\" after modification:\n"<<_Matrices[MatrixName];
@@ -290,39 +302,40 @@ int Lina::Change(const std::vector<std::string> &arguments)
 
 int Lina::Show(const std::vector<std::string> &arguments) const
 {
+
     //If the user only specify SHOW as their command
-    //Then we'll show them ALL the matrix
+    //Then we'll show them the info of all the matrices
     if (arguments.size()==0)
     {
         for (auto &pair: _Matrices)
-            std::cout<<"Matrix "<<pair.first<<": \n"<<pair.second<<"\n\n";
-        return SHOW;
+            std::cout<<"Matrix "<<pair.first<<" "
+                        <<pair.second.Rows()<<"x"<<pair.second.Columns()
+                        <<"\n";
     }
 
-    //If option --info is given, print matrices names and size
-    if (arguments.size()==1 && arguments[0]=="--info")
+    else if (arguments[0]=="--all")
     {
         for (auto &pair: _Matrices)
-            std::cout<<"Matrix \""<<pair.first<<"\" is a "
-                        <<pair.second.Rows()<<"x"<<pair.second.Columns()
-                        <<" matrix\n";
-        return SHOW;
+            std::cout<<"Matrix "<<pair.first<<": \n"<<pair.second<<"\n";
     }
-
-    //Print name/expression and result
-    for (auto &Arg: arguments)
+    else 
     {
-        auto ArgumentOption = BreakExpressions(Arg, std::isspace);
-        if (ArgumentOption[0]=="--info")
+        //Print name/expression and result
+        for (auto &Arg: arguments)
         {
-            auto Expression=Arg.substr(6);
-            auto Matrix = Calculate(Expression);
-            std::cout<<"Matrix \""<<Expression<<"\" is a "
-                        <<Matrix.Rows()<<"x"<<Matrix.Columns()<<" matrix.\n";
-        }
-        else
+            auto ArgumentOption = BreakExpressions(Arg, std::isspace);
+            /*
+            if (ArgumentOption[0]=="--info")
+            {
+                auto Expression=Arg.substr(6);
+                auto Matrix = Calculate(Expression);
+                std::cout<<"Matrix \""<<Expression<<"\" is a "
+                            <<Matrix.Rows()<<"x"<<Matrix.Columns()<<" matrix.\n";
+            }
+            else*/
             std::cout<<"Matrix \""<<Arg<<"\":\n"<<Calculate(Arg)<<"\n";  
-    }   
+        }   
+    }
     return SHOW;
 }
 

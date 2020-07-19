@@ -1,0 +1,3 @@
+<Quit Lina>
+		quit [Your inspiring speech here]
+	+) Don't worry, no one will hear it (maybe I should put it into a log file in the future?)

@@ -27,7 +27,7 @@ bool Lina::IsValidMatrixName(std::string name) const
         And it must not collide with other keyword/matrix name
     */
     if (_Matrices.find(name)!=_Matrices.end() ||
-        _Commands.find(name)!=_Commands.end())
+        _Utility.find(name)!=_Utility.end())
         return false;
     
     return true;
@@ -40,7 +40,7 @@ bool Lina::IsMatrix(std::string name) const
 
 bool Lina::IsCommand(std::string name) const
 {
-    return _Commands.find(name)!=_Commands.end();
+    return _Utility.find(name)!=_Utility.end();
 }
 
 bool Lina::IsKeyword(std::string name) const

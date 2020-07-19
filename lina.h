@@ -33,8 +33,6 @@
 #include <regex>
 #include <unordered_set>
 
-
-
 class Lina
 {
     friend class Lina_Utility<int, const vector<string> &>;
@@ -45,7 +43,7 @@ private:
     std::unordered_map<std::string, Matrix<Fraction>> _Matrices;
 
     //Map a command with a corresponding name
-    std::unordered_map<std::string, Lina_Utility<int, const vector<string>&>> _Commands;
+    std::unordered_map<std::string, Lina_Utility<int, const vector<string>&>> _Utility;
 
     //The name of the language file
     std::string _CurrentLanguage;
@@ -53,6 +51,10 @@ private:
     //An array to keep the language pack for use
     std::vector<std::string>  _Language;
 
+    //Defined at lina_init.cpp
+    //Tell the path to the banner and help files
+    static std::string BannerDir;
+    static std::string HelpDir;
 public:
 
     /*
@@ -63,7 +65,6 @@ public:
     Lina();
 
     //Draw a pretty banner on the terminal at application startup
-    #define BANNER "LinaBanner.txt"
     void Intro();
 
     int Start();
@@ -76,8 +77,6 @@ public:
      * Those arguments are then passed down to another commands
      */
     int GetCommand();
-
-    int ChangeLanguage(const std::vector<std::string> & arguments);
 
     int Help(const std::vector<std::string> & arguments) const;
 

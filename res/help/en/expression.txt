@@ -1,0 +1,9 @@
+<Writing Expressions>
+	<Matrix Name 1> [operator] <Matrix Name 2> [...] 
+	+) Supported operators: + (sum), - (subtraction), * (multiplication).
+	+) You can use parentheses to group expressions together.
+		E.g.: (ABC+DEF)*(DEF-ABC)
+	+) Expressions with numbers are not properly supported yet
+		There'll be bugs when you do something like: 1*ABC
+	+) Future update might include functions to work with
+		(Inverse Matrix, Determinant, ...)

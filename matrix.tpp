@@ -311,26 +311,54 @@ bool Matrix<_Type>::IsInvertible() const
 
 /* I/O  O P E R A T I O N S */
 
- //Receive input for ALL elements in the matrix
+//Receive input for ALL elements in the matrix
 template<typename _Type>
 std::istream& operator>>(std::istream& IS, Matrix<_Type>& M)
 {
     Matrix<_Type> tempMatrix(M.Rows(), M.Columns());
     for (size_t iii=0; iii<tempMatrix.Rows(); ++iii)
     {
+        
         std::cout<<"Enter row "<<iii<<": ";
+        
         for (size_t jjj=0; jjj<tempMatrix.Columns(); ++jjj)
         {
+            while (std::isspace(IS.peek()) && IS.peek()!='\n')
+            {
+                IS.ignore(1);
+            }
+            if (IS.peek()=='\n')
+            {
+                IS.ignore(1);
+                std::cout<<"<"<<tempMatrix.Columns()-jjj
+                        <<" more elements for this rows>\n"
+                        <<"Enter row "<<iii<<": ";
+                
+                //Print out what has already written into the row
+                for (int kkk=0; kkk<jjj; ++kkk)
+                    std::cout<<tempMatrix.at(iii, kkk)<<"  ";
+            }
             IS>>tempMatrix.at(iii, jjj);
         }
 
-        while (IS.peek()!='\n')
+        //Check for abundant elements
+        while (std::isspace(IS.peek()) && IS.peek()!='\n')
         {
-            if (!std::isspace(IS.peek()))
-                throw(Mexception("Input has too many elements for one row\n"));
-            
             IS.ignore(1);
         }
+
+        if (IS.peek()!='\n')
+        {
+            IS.ignore(std::numeric_limits<int>::max(), '\n');
+            std::cout<<"Too many elements for one row.\nPlease try again.\n\n";
+            //Reinitialize this row to default value of _Type
+            tempMatrix.row(iii) = (Matrix<_Type> (1, tempMatrix.Columns(), _Type())).row(0);
+            //Reset the count value
+            --iii;
+        }
+        else 
+            //Ignore the last '\n'
+            IS.ignore(1);
     }   
     M=tempMatrix;
     return IS;
