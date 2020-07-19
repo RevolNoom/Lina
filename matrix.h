@@ -213,6 +213,6 @@ Matrix<_Type> Identity(long long order, const _Type &value);
 #include "matrix.tpp"
 #include "matrix2.tpp"
 
-std::ostream& operator<<(std::ostream& OS, const Matrix<Fraction> &M);
-std::ostream& operator<<(std::ostream& OS, const Matrix<double>& M);
+//std::ostream& operator<<(std::ostream& OS, const Matrix<Fraction> &M);
+//std::ostream& operator<<(std::ostream& OS, const Matrix<double>& M);
 #endif /* MATRIX_H */

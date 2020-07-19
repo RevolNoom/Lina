@@ -5,6 +5,44 @@
 
 #include "lina.h"
 
+template<typename Return_Type, typename ...Args_Type>
+int Lina::CreateUtility(const std::string &UtilName, 
+                        Return_Type (Lina::*Fptr)(Args_Type...), 
+                        const std::string &HelpfilePath)
+{
+    //It means this keyword is in use
+    //We cannot create an utility with this keyword
+    if (_Keywords.find(UtilName)!=_Keywords.end())
+        return 1;
+
+    _Commands.insert({UtilName, Lina_Utility<Return_Type, Args_Type...>
+                                        (UtilName, Fptr, HelpfilePath)
+                    });
+
+    _Keywords.insert(UtilName);
+    return 0;
+}
+
+
+template<typename Return_Type, typename ...Args_Type>
+int Lina::CreateUtility(const std::string &UtilName, 
+                        Return_Type (Lina::*Fptr)(Args_Type...) const, 
+                        const std::string &HelpfilePath)
+{
+    //It means this keyword is in use
+    //We cannot create an utility with this keyword
+    if (_Keywords.find(UtilName)!=_Keywords.end())
+        return 1;
+
+    _Commands.insert({UtilName, Lina_Utility<Return_Type, Args_Type...>
+                                (UtilName, Fptr, HelpfilePath)
+
+                    });
+
+    _Keywords.insert(UtilName);
+    return 0;
+}
+
 Lina::Lina():_CurrentLanguage("EN-en")
 {
     using namespace std::placeholders;
@@ -13,28 +51,27 @@ Lina::Lina():_CurrentLanguage("EN-en")
     /*
         Binds keywords to functions
     */
+    std::string HelpDir("res/help/");
 
-    _Commands.insert({string("exit"), 
-                      function<int(const vector<string> &)>(bind(&Lina::Exit, this, _1)) 
-                      });
-   
-    _Commands.insert({string("help"), 
-                      function<int(const vector<string> &)>(bind(&Lina::Help, this, _1))
-                      });
+    CreateUtility(string("create"), &Lina::Create, string(HelpDir + "create.txt"));
 
-    _Commands.insert({string("create"), 
-                      function<int(const vector<string> &)>(bind(&Lina::Create, this, _1))
-                      });
+    CreateUtility(string("help"), &Lina::Help, string(HelpDir + "help.txt"));
 
-    _Commands.insert({string("show"), 
-                      function<int(const vector<string> &)>(bind(&Lina::Show, this, _1))
-                      });
-   _Commands.insert({string("change"), 
-                      function<int(const vector<string> &)>(bind(&Lina::Change, this, _1))
-                      });
+    CreateUtility(string("quit"), &Lina::Quit, string(HelpDir + "quit.txt"));
+
+    CreateUtility(string("show"), &Lina::Show, string(HelpDir + "show.txt"));
+
+    CreateUtility(string("change"), &Lina::Change, string(HelpDir + "change.txt"));
+
+    //CreateUtility(string(""), &Lina::, string(".txt"));
+
+
+
+    
+
     /*
-   _Commands.insert({string(""), });*/
 
+*/
     /*
         Reserved keywords
     */
@@ -49,11 +86,6 @@ Lina::Lina():_CurrentLanguage("EN-en")
     // "i" as in Identity (Matrix) (Yeah, i need to work on that real soon)
     //_Keywords.insert("i");
     _Keywords.insert("--language");
-    _Keywords.insert("exit");
-    _Keywords.insert("help");
-    _Keywords.insert("create");
-    _Keywords.insert("show");
-    _Keywords.insert("change");
     
     // _Keywords.insert("");
     

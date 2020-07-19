@@ -351,8 +351,7 @@ std::ostream& operator<<(std::ostream& OS, const Matrix<_Type> &M)
     for (long long row=0; row<M.Rows(); ++row)
         for(long long col=0; col<M.Columns(); ++col)
         {
-            std::stringstream ss(M.at(row, col));
-            ElementLength.at(row, col)=ss.str().length();
+            ElementLength.at(row, col)=M.at(row, col).WriteLength();
             if (ElementLength.at(row, col)>LongestLength)
                 LongestLength=ElementLength.at(row, col);
         }

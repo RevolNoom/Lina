@@ -14,7 +14,7 @@
 
 enum CommandValues
 {
-    EXIT,
+    QUIT,
     CHANGE,
     HELP,
     SHOW,
@@ -25,13 +25,44 @@ enum CommandValues
     MAX_LINE_SIZE = 300
 };
 
+void Lina::Intro()
+{
+    std::fstream Banner(BANNER);
+    if (!Banner.is_open()) 
+    {
+        std::cout<<"HEY! WHO STOLE OUR PRETTY BANNER? >:( \n";
+    }
+    else
+    {
+        std::string Str;
+
+        while (1)
+        {
+            if (std::getline(Banner, Str))
+            {
+                std::cout<<Str<<"\n";
+            }
+            else if (Banner.eof())
+                break;
+            else 
+            {
+                std::cerr<<"Banner Ripped! Reason unknown!";
+            }
+        }
+    }
+    std::cout<<"\nWhat would you like to do? \n"
+             <<"Type \"help\" for a list of commands to use.\n";
+
+}
 
 int Lina::Start()
 {
+    Intro();
     //ChangeLanguage();
     int LastCommand=1;
-    while(LastCommand!=EXIT)
+    while(LastCommand!=QUIT)
     {
+        std::cout<<"Your command: ";
         try
         {
             LastCommand= GetCommand();  
@@ -51,34 +82,40 @@ int Lina::Start()
 int Lina::GetCommand()
 {
     //Get the command from keyboard
-    std::cout<<"\nWhat would you like to do? \n"
-             <<"Type \"help\" for a list of commands to use.\n";
-
     std::string input;
     std::getline(std::cin, input);
 
     std::stringstream ss(input);
     std::string CommandName;
     ss>>CommandName;
-    // std::cout<<"CommandName: "<<CommandName<<"\n";
 
     std::transform(CommandName.begin(), 
                     CommandName.end(), 
                     CommandName.begin(), 
                     (int (*)(int)) std::tolower);
 
-    if (!IsCommand(CommandName))
-        throw(Mexception("There's no command available with keyword \"" + CommandName + "\"."));
-
 
     std::string Arguments;
     std::getline(ss, Arguments);
 
-    // std::cout<<"Arguments: "<<Arguments<<"\n";
-    return _Commands[CommandName](BreakExpressions(Arguments, IsComma));
+    return CallUtility(CommandName, BreakExpressions(Arguments, IsComma));
 }
 
+int Lina::CallUtility(const string& Util_Name, const vector<string> &Args)
+{
+    if (!IsCommand(Util_Name))
+        throw(Mexception("There's no command available with keyword \"" + Util_Name + "\"."));
+    
+    int Util_Result(-1);
 
+    std::visit([this, &Util_Result, &Util_Name, &Args](const auto& Util) 
+                {
+                    Util_Result = (this->*Util)(Args);
+                }
+                , _Commands[Util_Name]._Util_Function);
+
+    return Util_Result;
+}
 
 /*
 int Lina::ChangeLanguage()
@@ -110,8 +147,14 @@ int Lina::Help(const std::vector<std::string> &arguments) const
     std::string fileName("en_help.txt");
     std::fstream help;
 
+    //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    //I wrote this and then forgot what it does. I'm keeping it just in case...
+    //std::vector<bool> HelpNeeded(MAX_VALUE);
+
+/*
     if (_CurrentLanguage=="VN-vn")
         fileName="vn_help.txt";
+*/
 
     help.open(fileName, std::ios::in);
 
@@ -226,12 +269,6 @@ int Lina::Change(const std::vector<std::string> &arguments)
                     std::regex("([_a-zA-Z][_\\w\\d]*)(\\s+(\\d+)\\s*x?\\s*(\\d+)\\s*)?")))
                 throw(Mexception("Invalid arguments: " + Arg));
 
-            /*
-            for (int iii=0; iii<sm.size(); ++iii)
-            {
-                std::cout<<"sm["<<iii<<"]: "<<sm[iii].str()<<"\n";
-            } */
-
             MatrixName=sm[1].str();
             if (sm[3].str()!=std::string(""))
                 _Matrices[MatrixName]=Matrix<Fraction>(std::stoll(sm[3].str()), std::stoll(sm[4].str()));
@@ -292,8 +329,9 @@ int Lina::Show(const std::vector<std::string> &arguments) const
 
 
 
-int Lina::Exit(const std::vector<std::string> &arguments) const
+int Lina::Quit(const std::vector<std::string> &arguments) const
 {
     std::cout<<"See you again!\n";
-    return EXIT;
+    return QUIT;
 }
+

@@ -9,40 +9,43 @@
 */
 /*
     Future updates:
+    +) Wrapper object to each utility of Lina
     +) Change() to change language
     +) Read Makefile and then update g++ with -std=c++17 for std::variant
-    +_ Calculate() remade with inclusion of identity matrix
+    +) Calculate() remade with inclusion of identity matrix
+    +) Redirect output to text file
+    +) Remove a matrix
 */
 
 
 #ifndef LINA_H
 #define LINA_H
 
+
+
 #include <unordered_map>
+#include <fstream>
 #include <functional>
-#include <list>
+#include <limits>
 #include <fstream>
 #include "matrix.h"
-#include "language.h"
+#include "lina_util.h"
 #include <regex>
 #include <unordered_set>
-//#include <variant>
+
 
 
 class Lina
 {
+    friend class Lina_Utility<int, const vector<string> &>;
 private:
 
     std::unordered_set<std::string> _Keywords;
 
     std::unordered_map<std::string, Matrix<Fraction>> _Matrices;
 
-    //Map a command with a corresponding value
-    std::unordered_map<std::string, 
-                        std::function<
-                            int(const std::vector<std::string> &
-                                        )>> 
-                                        _Commands;
+    //Map a command with a corresponding name
+    std::unordered_map<std::string, Lina_Utility<int, const vector<string>&>> _Commands;
 
     //The name of the language file
     std::string _CurrentLanguage;
@@ -58,7 +61,11 @@ public:
     */
    
     Lina();
-    
+
+    //Draw a pretty banner on the terminal at application startup
+    #define BANNER "LinaBanner.txt"
+    void Intro();
+
     int Start();
     
     //int Intro();
@@ -102,9 +109,12 @@ public:
     */
     int Change(const std::vector<std::string> & arguments);
 
+    /*
+        Show existing matrices by names, or by drawing a board
+    */
     int Show(const std::vector<std::string> & arguments) const;
 
-    int Exit(const std::vector<std::string> & arguments) const;
+    int Quit(const std::vector<std::string> & arguments) const;
 
 protected:
 //public:
@@ -138,7 +148,7 @@ protected:
     /*
         @brief  Test a word to see whether it's a command keyword
         @param  The word to test
-        @return True if that word (in case - INSENSITIVE) is a command. 
+        @return True if that word (case - INSENSITIVE) is a command. 
                 False otherwise
     */
     bool IsCommand(std::string name) const;
@@ -150,6 +160,28 @@ protected:
                 False otherwise
     */
     bool IsKeyword(std::string name) const;
+
+
+    /*
+        Create an utility to better manage the application
+        return 0 if the utility is added successfully
+                1 otherwise.
+
+    */
+   
+    template<typename Return_Type, typename ...Args_Type>
+    int CreateUtility(const std::string &UtilName, 
+                        Return_Type (Lina::*Fptr)(Args_Type...), 
+                        const std::string &HelpfilePath);
+
+
+    template<typename Return_Type, typename ...Args_Type>
+    int CreateUtility(const std::string &UtilName, 
+                        Return_Type (Lina::*Fptr)(Args_Type...) const, 
+                        const std::string &HelpfilePath);
+
+    int CallUtility(const string &Util_Name, const vector<string> &Args);
+
 
     /*
         Actually, Calculate() is only a wrapper function.
@@ -163,6 +195,7 @@ protected:
                 The first factor in the expression.
     */
     //std::variant<Matrix<Fraction>, Fraction> RealCalculate(const std::string &expression, size_t begin, size_t end) const;
+
 };
 
 /*
