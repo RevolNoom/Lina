@@ -47,7 +47,7 @@ void Lina::Intro()
                 break;
             else 
             {
-                std::cerr<<"Banner Ripped! Reason unknown!";
+                std::cerr<<"Banner Ripped! Reasons unknown!";
             }
         }
     }
@@ -117,29 +117,6 @@ int Lina::CallUtility(const string& Util_Name, const vector<string> &Args)
 
     return Util_Result;
 }
-
-/*
-int Lina::ChangeLanguage()
-{
-    //std::cout<<"Tieng Viet (vn)\nEnglish (en)\n";
-    std::cout<<"English (en)\n";
-    std::string answer;
-    std::cin>>answer;
-
-    if (answer=="vn")
-        _CurrentLanguage="VN-vn";
-    else if (answer=="en")
-        _CurrentLanguage="EN-en";
-
-
-    std::ifstream langPack(_CurrentLanguage);
-    _Language.resize(ALL_CATEGORY);
-
-    for (size_t iii=0; iii<ALL_CATEGORY; ++iii)
-        langPack>>_Language[iii];
-
-    return CHANGE_LANGUAGE;
-}*/
 
 
 
@@ -261,7 +238,7 @@ int Lina::Change(const std::vector<std::string> &arguments)
             if (!IsMatrix(Verses[0]))
                 throw (Mexception("\"" + Verses[0] + std::string("\" is not a matrix name.")));
             MatrixName=Verses[0];
-            _Matrices[MatrixName] = Calculate(Verses[1]);
+            _Matrices[MatrixName]=Calculate(Verses[1]);
         }
         /*
             Change the matrix by keyboard input
@@ -286,10 +263,14 @@ int Lina::Change(const std::vector<std::string> &arguments)
                 _Matrices[MatrixName]=New_Matrix;
             }
             else
-                std::cin>>_Matrices[MatrixName];
+                std::cin>>std::get<Matrix<Fraction>>(_Matrices[MatrixName]);
         }
         
-        std::cout<<"\nYour matrix \""<<MatrixName<<"\" after modification:\n"<<_Matrices[MatrixName];
+        std::cout<<"\nYour matrix \""<<MatrixName<<"\" after modification:\n";
+        if (std::holds_alternative<Fraction>(_Matrices[MatrixName]))
+            std::cout<<std::get<Fraction>(_Matrices[MatrixName])<<"*I.\n";
+        else
+            std::cout<<std::get<Matrix<Fraction>>(_Matrices[MatrixName])<<"\n";
     }
     
     return CHANGE;
@@ -308,15 +289,33 @@ int Lina::Show(const std::vector<std::string> &arguments) const
     if (arguments.size()==0)
     {
         for (auto &pair: _Matrices)
-            std::cout<<"Matrix "<<pair.first<<" "
-                        <<pair.second.Rows()<<"x"<<pair.second.Columns()
+        {
+            if (std::holds_alternative<Fraction>(pair.second))
+            {
+                std::cout<<"Matrix "<<pair.first<<" is "
+                            <<std::get<Fraction>(pair.second)<<"*I.\n";
+            }
+            else
+                std::cout<<"Matrix "<<pair.first<<" "
+                        <<std::get<Matrix<Fraction>>(pair.second).Rows()<<"x"
+                        <<std::get<Matrix<Fraction>>(pair.second).Columns()
                         <<"\n";
+        }
     }
 
     else if (arguments[0]=="--all")
     {
         for (auto &pair: _Matrices)
-            std::cout<<"Matrix "<<pair.first<<": \n"<<pair.second<<"\n";
+        {
+            if (std::holds_alternative<Fraction>(pair.second))
+                std::cout<<"Matrix "<<pair.first<<" is "
+                <<std::get<Fraction>(pair.second)<<"*I.\n";
+            else
+                std::cout<<"Matrix "<<pair.first<<" "
+                        <<std::get<Matrix<Fraction>>(pair.second).Rows()<<"x"
+                        <<std::get<Matrix<Fraction>>(pair.second).Columns()<<":\n"
+                        <<std::get<Matrix<Fraction>>(pair.second)<<"\n";
+        }
     }
     else 
     {
@@ -333,7 +332,17 @@ int Lina::Show(const std::vector<std::string> &arguments) const
                             <<Matrix.Rows()<<"x"<<Matrix.Columns()<<" matrix.\n";
             }
             else*/
-            std::cout<<"Matrix \""<<Arg<<"\":\n"<<Calculate(Arg)<<"\n";  
+            std::cout<<"Matrix \""<<Arg<<"\":\n";
+            auto Result=Calculate(Arg);
+            
+            if (std::holds_alternative<Fraction>(Result))
+                std::cout<<"Matrix "<<Result<" is "
+                <<std::get<Fraction>(Result)<<"*I.\n";
+            else
+                std::cout<<"Matrix "<<Result<" "
+                        <<std::get<Matrix<Fraction>>(Result).Rows()<<"x"
+                        <<std::get<Matrix<Fraction>>(Result).Columns()<<":\n"
+                        <<std::get<Matrix<Fraction>>(Result)<<"\n";
         }   
     }
     return SHOW;

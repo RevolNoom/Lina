@@ -48,7 +48,7 @@ public:
     Matrix(long long rows, long long columns, const _Type &value);
 
     template<typename __Type>
-    friend Matrix<__Type> Identity(long long order, const __Type& t);
+    friend Matrix<__Type> DiagonalMatrix(long long order, const __Type& t);
 
 
 
@@ -208,7 +208,7 @@ public:
     bool HasSameSizeWith(const Matrix<_Type>& M) const;
 };
 template<typename _Type>
-Matrix<_Type> Identity(long long order, const _Type &value);
+Matrix<_Type> DiagonalMatrix(long long order, const _Type &value);
 
 #include "matrix.tpp"
 #include "matrix2.tpp"

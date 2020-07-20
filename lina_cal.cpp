@@ -1,6 +1,37 @@
 #include "lina.h"
 
-Matrix<Fraction> Lina::Calculate(const std::string &Expression) const
+//Some helper functions, for, uhhh..., faster and cleaner coding
+Lina_Operand operator+(const Lina_Operand &Op1, const Lina_Operand &Op2)
+{
+    Lina_Operand result;
+    std::visit([Op1, Op2, &result](const auto & Frac_Or_Matrix_1)
+                {
+                    std::visit([Op1, Op2, &Frac_Or_Matrix_1, &result](const auto &Frac_Or_Matrix_2)
+                    {
+                        result = Frac_Or_Matrix_1 + Frac_Or_Matrix_2;
+                    }
+                    , Op2);
+                },
+                Op1);
+    return result;
+}
+
+Lina_Operand operator*(const Lina_Operand &Op1, const Lina_Operand &Op2)
+{
+    Lina_Operand result;
+    std::visit([Op1, Op2, &result](const auto & Frac_Or_Matrix_1)
+                {
+                    std::visit([Op1, Op2, &Frac_Or_Matrix_1, &result](const auto &Frac_Or_Matrix_2)
+                    {
+                        result = Frac_Or_Matrix_1 * Frac_Or_Matrix_2;
+                    }
+                    , Op2);
+                },
+                Op1);
+    return result;
+}
+
+std::variant<Fraction, Matrix<Fraction>> Lina::Calculate(const std::string &Expression) const
 {
     //Grab all + and - at the Expression beginning
     int sign(1);
@@ -21,7 +52,7 @@ Matrix<Fraction> Lina::Calculate(const std::string &Expression) const
     
     // All the +-+-+- are gone
     // Now it's time to create a temporary matrix to remember the matrix of this call
-    Matrix<Fraction> Current_Matrix;
+    std::variant<Fraction, Matrix<Fraction>> Current_Result;
 
     // Bad news! We've got the parentheses!
     if (Expression[pos]=='(')
@@ -38,7 +69,7 @@ Matrix<Fraction> Lina::Calculate(const std::string &Expression) const
         if (endGroup==-1)
             throw(Mexception("No matching parenthesis: " + Expression));
 
-        Current_Matrix= Calculate(Expression.substr(pos+1, endGroup-pos-1));
+        Current_Result= Calculate(Expression.substr(pos+1, endGroup-pos-1));
         
         //After calculates the group, we set the current examining position to after it
         pos=endGroup+1;
@@ -49,6 +80,7 @@ Matrix<Fraction> Lina::Calculate(const std::string &Expression) const
     */
     else
     {
+        //Finding the next Operand
         std::string Matrix_Name;
         int start=pos;
         for (;pos<Expression.size();++pos)
@@ -60,13 +92,34 @@ Matrix<Fraction> Lina::Calculate(const std::string &Expression) const
 
         Matrix_Name= Expression.substr(start, pos-start);
 
-        if (_Matrices.find(Matrix_Name)==_Matrices.end())
+        /*
+            Evaluate and assign Current_Result with the suitable value
+                (either a Matrix, 
+                    or a Fraction (which is converted from an int))
+        */
+        if (_Matrices.find(Matrix_Name)!=_Matrices.end())
+        {
+            Current_Result=_Matrices.at(Matrix_Name);
+        }
+        else if (IsInteger(Matrix_Name))
+        {
+            Current_Result=std::stoi(Matrix_Name);
+        }    
+        else 
             throw(Mexception("Matrix " + Matrix_Name + " not found"));
-        
-        Current_Matrix=_Matrices.at(Matrix_Name);
     }
 
-    Current_Matrix*=Fraction(sign);
+    /*
+        Adding std::variant does mess up a lot
+        This expression multiply our current result with the sign 
+        we gobbled at the beginning of the function
+    */
+    std::visit([&sign, &Current_Result](auto &Whether_Matrix_Or_Fraction)
+                {
+                    Whether_Matrix_Or_Fraction*=Fraction(sign);
+                }
+                ,Current_Result);
+
     //std::cout<<"Expression \""<<Expression<<"\": Current_Matrix: \n"<<Current_Matrix<<"\n";
 
 
@@ -77,7 +130,11 @@ Matrix<Fraction> Lina::Calculate(const std::string &Expression) const
         {
             case '+':
             case '-':
-                return Current_Matrix
+                //I still use operator+ here
+                //  because in future evaluations,
+                //  the minus sign will be multiplied with 
+                //  its own variable "sign" above
+                return Current_Result
                             + Calculate(Expression.substr(pos));
             
             /*
@@ -111,7 +168,7 @@ Matrix<Fraction> Lina::Calculate(const std::string &Expression) const
                     {
                         case '+':
                         case '-':
-                            return Current_Matrix * Calculate(Expression.substr(pos, endGroup-pos))
+                            return Current_Result * Calculate(Expression.substr(pos, endGroup-pos))
                                      + Calculate(Expression.substr(endGroup));
 
                         case '(':
@@ -119,7 +176,7 @@ Matrix<Fraction> Lina::Calculate(const std::string &Expression) const
                             if (endGroup==-1)
                                 throw(Mexception("Expression \"" + Expression + "\" has unmatching brace"));
                     }
-                return Current_Matrix * Calculate(Expression.substr(pos));
+                return Current_Result * Calculate(Expression.substr(pos));
             }
 
             /*
@@ -147,7 +204,7 @@ Matrix<Fraction> Lina::Calculate(const std::string &Expression) const
 
     
    // There's no operator here, so this's the end of the Expression
-   return Current_Matrix;   
+   return Current_Result;   
 }
 
 

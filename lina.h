@@ -21,8 +21,7 @@
 #ifndef LINA_H
 #define LINA_H
 
-
-
+#include <variant>
 #include <unordered_map>
 #include <fstream>
 #include <functional>
@@ -33,6 +32,8 @@
 #include <regex>
 #include <unordered_set>
 
+using Lina_Operand = std::variant<Fraction, Matrix<Fraction>>;
+
 class Lina
 {
     friend class Lina_Utility<int, const vector<string> &>;
@@ -40,7 +41,7 @@ private:
 
     std::unordered_set<std::string> _Keywords;
 
-    std::unordered_map<std::string, Matrix<Fraction>> _Matrices;
+    std::unordered_map<std::string, Lina_Operand> _Matrices;
 
     //Map a command with a corresponding name
     std::unordered_map<std::string, Lina_Utility<int, const vector<string>&>> _Utility;
@@ -134,7 +135,7 @@ protected:
         @param  The expression you want to calculate
         @return The resulting matrix
     */
-    Matrix<Fraction> Calculate(const std::string &expression) const;
+    std::variant<Fraction, Matrix<Fraction>> Calculate(const std::string &expression) const;
 
     
     /*
@@ -204,6 +205,8 @@ protected:
             -1 if there's no valid parentheses group
 */
 size_t FindMatchingParentheses(const std::string &str);
+
+bool IsInteger(const std::string &str);
 
 /*
         @brief  Break a string into many substrings, based on the delimiter

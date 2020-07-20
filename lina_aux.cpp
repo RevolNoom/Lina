@@ -102,6 +102,22 @@ std::vector<std::string> BreakExpressions(const std::string &Expression, int (*d
     return result;
 }
 
+bool IsInteger(const std::string &str)
+{
+    //Ignore the whitespace at the front and back of the string
+    int front(0), back(str.size()-1);
+    while (std::isspace(str[front]) && front<str.size())
+        ++front;
+
+    while (std::isspace(str[back]) && back>=0 )
+        --back;
+    
+    for (; front<=back; ++front)
+        if (!std::isdigit(str[front]))
+            return false;
+
+    return true;
+}
 std::string TrimWhiteSpace(const std::string &str)
 {
     int begin(0), end(str.size()-1);

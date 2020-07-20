@@ -1,9 +1,16 @@
+/*
+    Lina_Util is somewhat a struct to pack things together.
+    It packs Function name, Function itself, 
+        and the helpfile that's associated with it
+*/
+
 #ifndef LINA_UTIL
 #define LINA_UTIL
 
-
-//Added filesystem here because i've never used it
-//and thought that maybe this'll be good for my practice
+/*
+    Have never used filesystem before
+    Now's as a good time as ever to practice it a bit
+*/
 #include <filesystem>
 #include <string>
 #include <iostream>
@@ -15,14 +22,6 @@
 class Lina;
 
 using namespace std;
-
-/*
-    Here's what it does:
-    - Keeps track of the function name.
-    - Can be invoked to perform its function to data inside Lina (using operator() )
-    - Shows help, remember where the manual for its function is.
-*/
-
 
 template <typename Return_Type, typename ...Args_Type>
 using Util_Ptr = Return_Type (Lina::*) (Args_Type...);
@@ -61,6 +60,7 @@ public:
                 Util_Ptr<Return_Type, Args_Type...> Fptr, 
                 const string &Helpfile);
 
+    // Construct Utility for a const-qualified function 
     Lina_Utility(const string &Function_Name, 
                 Util_cPtr<Return_Type, Args_Type...> Fptr, 
                 const string &Helpfile);
