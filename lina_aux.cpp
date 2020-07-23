@@ -49,10 +49,10 @@ bool Lina::IsKeyword(std::string name) const
 }
 
 
-size_t FindMatchingParentheses(const std::string &str)
+size_t FindMatchingParentheses(const std::string &str, int begin, int end)
 {
     int result(-1);
-    for (int iii=0; iii<str.size(); ++iii)
+    for (int iii=begin; iii<str.size(); ++iii)
         if (str[iii]=='(')
         {
             result=iii;
@@ -63,8 +63,8 @@ size_t FindMatchingParentheses(const std::string &str)
         return -1;
     
     //Counter checks if the right ')' is found or not
-    int counter=0;
-    for (int iii=result; iii<str.size(); ++iii)
+    int counter=1;
+    for (int iii=result+1; iii<end && iii<str.size(); ++iii)
     {
         if (str[iii]=='(')
             ++counter;
@@ -78,7 +78,7 @@ size_t FindMatchingParentheses(const std::string &str)
 }
 
 
-std::vector<std::string> BreakExpressions(const std::string &Expression, int (*delimPred)(int c))
+std::vector<std::string> Lina::BreakExpressions(const std::string &Expression, int (*delimPred)(int c))
 {
     std::vector<std::string> result;
     int begin(0);
@@ -135,4 +135,37 @@ std::string TrimWhiteSpace(const std::string &str)
 int IsComma(int c)
 {
     return c==',';
+}
+
+Lina_Operand Pow(const Lina_Operand &Base, int power)
+{
+    Lina_Operand Multiplier=Base;
+
+    if (power<0)
+    {
+        if (std::holds_alternative<Fraction>(Base))
+        {
+            Multiplier = 1/std::get<Fraction>(Base);
+        }
+        else 
+        {
+            Multiplier=std::get<Matrix<Fraction>>(Base).Inverse();
+        }
+        power = -power;
+    }
+
+    Lina_Operand Result=1;
+
+
+    while (power)
+    {
+        if (power%2==1)
+        {
+            Result= Result*Multiplier;
+        }
+        Multiplier= Multiplier*Multiplier;
+
+        power/=2;
+    }
+    return Result;
 }

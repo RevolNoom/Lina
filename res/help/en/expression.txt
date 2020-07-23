@@ -1,9 +1,10 @@
 <Writing Expressions>
 	<Matrix Name 1> [operator] <Matrix Name 2> [...] 
-	+) Supported operators: + (sum), - (subtraction), * (multiplication).
+	+) Supported operators: + (sum), - (subtraction), * (multiplication), ^ (power).
+	+) Power operation ^ takes a fraction or matrix as base, and raise it to the power of an integer.
+		(NOTE: You must wrap the power part inside parentheses)
+		ABC^(2), ABC^(-1), ABC^(10)
 	+) You can use parentheses to group expressions together.
 		E.g.: (ABC+DEF)*(DEF-ABC)
-	+) Expressions with numbers are not properly supported yet
-		There'll be bugs when you do something like: 1*ABC
 	+) Future update might include functions to work with
 		(Inverse Matrix, Determinant, ...)

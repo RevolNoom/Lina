@@ -1,7 +1,7 @@
 <Show matrices>
-		show [--all | Matrix Names | Expression]
+		show [--all | Matrix Name | Expression]
 	+) If given no argument, Show lists all available matrices with their respective size.
-	+) Draw the matrix you want by listing its name. You can list many at once.
+	+) Draw the matrix you want by listing its name.
 	+) "show --all" draws all the matrices you have ever created.
 	+) You can choose to write out the result of an expression
 		E.g.:

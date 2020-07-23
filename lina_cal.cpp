@@ -1,6 +1,16 @@
 #include "lina.h"
 
 //Some helper functions, for, uhhh..., faster and cleaner coding
+std::ostream& operator<<(std::ostream& os, const Lina_Operand &Op)
+{
+    std::visit([&](auto &whatever)
+    {
+        os<<whatever;
+    }, Op);
+    return os;
+}
+
+//Some helper functions, for, uhhh..., faster and cleaner coding
 Lina_Operand operator+(const Lina_Operand &Op1, const Lina_Operand &Op2)
 {
     Lina_Operand result;
@@ -9,6 +19,22 @@ Lina_Operand operator+(const Lina_Operand &Op1, const Lina_Operand &Op2)
                     std::visit([Op1, Op2, &Frac_Or_Matrix_1, &result](const auto &Frac_Or_Matrix_2)
                     {
                         result = Frac_Or_Matrix_1 + Frac_Or_Matrix_2;
+                    }
+                    , Op2);
+                },
+                Op1);
+    return result;
+}
+
+//Some helper functions, for, uhhh..., faster and cleaner coding
+Lina_Operand operator-(const Lina_Operand &Op1, const Lina_Operand &Op2)
+{
+    Lina_Operand result;
+    std::visit([Op1, Op2, &result](const auto & Frac_Or_Matrix_1)
+                {
+                    std::visit([Op1, Op2, &Frac_Or_Matrix_1, &result](const auto &Frac_Or_Matrix_2)
+                    {
+                        result = Frac_Or_Matrix_1 - Frac_Or_Matrix_2;
                     }
                     , Op2);
                 },
@@ -31,191 +57,218 @@ Lina_Operand operator*(const Lina_Operand &Op1, const Lina_Operand &Op2)
     return result;
 }
 
-std::variant<Fraction, Matrix<Fraction>> Lina::Calculate(const std::string &Expression) const
+//Some helper functions, for, uhhh..., faster and cleaner coding
+Lina_Operand operator/(const Lina_Operand &Op1, const Lina_Operand &Op2)
 {
-    //Grab all + and - at the Expression beginning
-    int sign(1);
-    int pos(0);
-
-    for (; pos<Expression.size(); ++pos)
-    {
-        int letter=Expression[pos];
-
-        if (std::isspace(letter) ||
-                letter=='+')
-            continue;
-        else if (letter=='-')
-            sign*=-1;
-        else 
-            break;
-    }
-    
-    // All the +-+-+- are gone
-    // Now it's time to create a temporary matrix to remember the matrix of this call
-    std::variant<Fraction, Matrix<Fraction>> Current_Result;
-
-    // Bad news! We've got the parentheses!
-    if (Expression[pos]=='(')
-    {
-        /*
-            What we're gonna do
-            is to not care what's in the parentheses group at all!
-
-            We'll just calculate that, and then return it to the outside world
-        */
-        int endGroup= FindMatchingParentheses(Expression);
-
-        //An invalid Expression (No matching closing parenthesis). How sad.
-        if (endGroup==-1)
-            throw(Mexception("No matching parenthesis: " + Expression));
-
-        Current_Result= Calculate(Expression.substr(pos+1, endGroup-pos-1));
-        
-        //After calculates the group, we set the current examining position to after it
-        pos=endGroup+1;
-    }
-    /*
-        Or there's no parentheses at all!
-        In that case, what we want to look for is the matrix name our user gives
-    */
-    else
-    {
-        //Finding the next Operand
-        std::string Matrix_Name;
-        int start=pos;
-        for (;pos<Expression.size();++pos)
-        {
-            if (!std::isalnum(Expression[pos]) &&
-                Expression[pos]!='_')
-                break;
-        }
-
-        Matrix_Name= Expression.substr(start, pos-start);
-
-        /*
-            Evaluate and assign Current_Result with the suitable value
-                (either a Matrix, 
-                    or a Fraction (which is converted from an int))
-        */
-        if (_Matrices.find(Matrix_Name)!=_Matrices.end())
-        {
-            Current_Result=_Matrices.at(Matrix_Name);
-        }
-        else if (IsInteger(Matrix_Name))
-        {
-            Current_Result=std::stoi(Matrix_Name);
-        }    
-        else 
-            throw(Mexception("Matrix " + Matrix_Name + " not found"));
-    }
-
-    /*
-        Adding std::variant does mess up a lot
-        This expression multiply our current result with the sign 
-        we gobbled at the beginning of the function
-    */
-    std::visit([&sign, &Current_Result](auto &Whether_Matrix_Or_Fraction)
+    Lina_Operand result;
+    std::visit([Op1, Op2, &result](const auto & Frac_Or_Matrix_1)
                 {
-                    Whether_Matrix_Or_Fraction*=Fraction(sign);
-                }
-                ,Current_Result);
-
-    //std::cout<<"Expression \""<<Expression<<"\": Current_Matrix: \n"<<Current_Matrix<<"\n";
-
-
-    //With the matrix name, we can do many operators with it
-    //Let's start with + and -
-    for (; pos<Expression.size(); ++pos)
-        switch(Expression[pos])
-        {
-            case '+':
-            case '-':
-                //I still use operator+ here
-                //  because in future evaluations,
-                //  the minus sign will be multiplied with 
-                //  its own variable "sign" above
-                return Current_Result
-                            + Calculate(Expression.substr(pos));
-            
-            /*
-                Multiplication is a huge, huge mess
-                Because * must be performed before + -
-                So we have to extract each groups of multipliers
-            */
-            case '*':
-            {
-                // For convenience, increment pos to ignore the current '*' character
-                ++pos;
-                int endGroup=pos;
-                /*
-                    Extraction of multipliers groups is performed as follow:
-                    +) Iterate sequencially through the expression
-                        Do not bother unless the current character is '(', '+' or '-'
-                        Why? Because:
-                    +) '*' has higher precedence than '+' and '-'.
-                        So '*' is performed before them
-                        Then '+' and '-' mark the end of a multiplier group
-                    +) But a multiplier may be a combination of sum and subtraction 
-                        via parentheses '()'. So we keep a look out for '('
-                    +) If the current character is '(', quickly find its matching brace
-                        and then move on as if 
-                        the whole monster inside the parentheses is just a multiplier
-                    +) Finally, if we don't find any + or -
-                        that means we have reached the end of the expression
-                */
-                for (;endGroup<Expression.size(); ++endGroup)
-                    switch (Expression[endGroup])
-                    {
-                        case '+':
-                        case '-':
-                            return Current_Result * Calculate(Expression.substr(pos, endGroup-pos))
-                                     + Calculate(Expression.substr(endGroup));
-
-                        case '(':
-                            endGroup += FindMatchingParentheses(Expression.substr(endGroup));
-                            if (endGroup==-1)
-                                throw(Mexception("Expression \"" + Expression + "\" has unmatching brace"));
-                    }
-                return Current_Result * Calculate(Expression.substr(pos));
-            }
-
-            /*
-                Another hassle!
-                Calculate power of a matrix. It may be inverse
-            case '^':
-            {
-
-            }
-
-            */
-            /*
-                Now there's a leakage in our algorithm
-                There might be cases where between two matrices,
-                no operator is applied to them at all!
-
-                That would make the expression invalid
-                and we must then treat it like one
-            */
-            default:
-                if (std::isalnum(Expression[pos]) || 
-                    Expression[pos]=='_')
-                    throw (Mexception("There's a missing operator in this expression: " + Expression));
-        }
-
-    
-   // There's no operator here, so this's the end of the Expression
-   return Current_Result;   
+                    result = Frac_Or_Matrix_1 / std::get<Fraction>(Op2);
+                },
+                Op1);
+    return result;
 }
 
-
-/*  T O  B E  U P D A T E D
-
-std::variant<Matrix<Fraction>, Fraction> Lina::RealCalculate(const std::string &Expression, size_t begin, size_t end) const
+std::variant<Fraction, Matrix<Fraction>> Lina::Calculate(const std::string &Expression) const
 {
-    //These codes will be swapped to inside Calculate()
-    //And what's in Calculate() will end up in here
-    auto Result = RealCalculate(Expression, 0, Expression.size());
-    if (std::holds_alternative<Matrix<Fraction>>(Result))
-        return std::get<Matrix<Fraction>>(Result);
-} 
+    int state=Verify_Parentheses_Expression(Expression);
+    if (state!=1)
+    {
+        std::string error="Expression has invalid parentheses placing.\n";
+        if (state==-1)
+            error+="Maybe you forget to wrap the number in () after ^ ?\n";
+
+        throw (Mexception(error));
+    }
+    std::vector<Lina_Operand> Operands{Fraction(0)};
+    std::vector<char> Operator{'+'};
+
+    // Calculate until the precedence level reach the given one
+    auto Pop_The_Stack= [&](int Precedence_Level=0) -> void
+                        {
+                            while (Operands.size()>1
+                                    && 
+                                    OperatorPrecedence(Operator.back())
+                                                >Precedence_Level)
+                            {
+                                Lina_Operand Right_Op = Operands.back();
+                                Operands.pop_back();
+                                switch(Operator.back())
+                                {
+                                    case '+':
+                                        Operands.back() = Operands.back() + Right_Op;
+                                        break;
+                                    case '-':
+                                        Operands.back() = Operands.back() - Right_Op;
+                                        break;
+                                    case '*':
+                                        Operands.back() = Operands.back() * Right_Op;
+                                        break;
+                                    case '^':
+                                        //std::cout<<"Calculating "<<Right_Op<<" and "<<std::get<Fraction>(Operands.back());
+                                        if (!std::holds_alternative<Fraction>(Right_Op) &&
+                                            !std::get<Fraction>(Right_Op).IsInteger())
+                                                throw (Mexception("Power operation must take an integer."));
+                                        Operands.back() = Pow(Operands.back(), 
+                                                    std::get<Fraction>(Right_Op).ToDouble());
+
+                                        break;
+                                }
+                                Operator.pop_back();
+                            }
+                        };
+    
+    bool Expecting_Operand(true);
+
+    for (int iii=0; iii<Expression.size(); ++iii)
+    {
+        if (Expecting_Operand)
+        {
+
+            Expecting_Operand=false;
+
+            switch(Expression[iii])            
+            {
+                case '(':
+                {
+                    int Matching_Par= FindMatchingParentheses(
+                                        Expression, iii, 
+                                        Expression.size());
+                    Operands.push_back(
+                            Calculate(Expression.
+                                            substr(iii+1,
+                                                        Matching_Par - iii-1)));
+                    iii=Matching_Par;
+                    break;
+                }
+                //    We are grabbing a whole lot of prefix +-+-
+                case '+':
+                case '-':
+                    if (Operator.back()!='+' 
+                        &&
+                        Operator.back()!='-')
+                        Operator.push_back(Expression[iii]);
+                    else 
+                        if (Expression[iii]=='-')
+                            Operator.back() = (Operator.back()=='+'?
+                                                    '-' : '+');
+                    break;
+
+                default:
+                    if (!std::isspace(Expression[iii]))
+                    {
+                        if (std::isalnum(Expression[iii]))
+                        {
+                            int start(iii);
+                            while (std::isalnum(Expression[iii])&&
+                                    iii<Expression.size())
+                            {
+                                ++iii;
+                            }
+                            std::string Name = Expression.substr(start, iii-start);
+                            //Put iii back one place to prepare for the next loop
+                            --iii;
+                            
+
+                            if (IsInteger(Name))
+                            {
+                                Fraction F(std::stoi(Name));
+                                Operands.push_back(F);
+                            }
+                            else if (_Matrices.find(Name) != _Matrices.end())
+                            {
+                                Operands.push_back(_Matrices.at(Name));
+                            }
+                            else 
+                                throw (Mexception(Name +
+                                                    " is neither a number or matrix."));
+                        }
+                    }
+                    else 
+                                throw (Mexception(Expression.substr(iii) + " is neither a number or matrix."));
+            }
+        }
+        else    //Expecting Operator
+        {
+            Expecting_Operand=true;
+
+            while (std::isspace(Expression[iii]) && 
+                    iii<Expression.size())
+                ++iii;
+            
+            //Test to see is it an operator
+            if (OperatorPrecedence(Expression[iii]))
+            {
+                //Since operator ^ yields different results 
+                //  when we calculate from different directions
+                //So, prioritize calculating it first
+                
+                Pop_The_Stack(OperatorPrecedence(Expression[iii]));
+                Operator.push_back(Expression[iii]);
+            }
+            else    //No operator found
+                throw(Mexception(Expression.substr(0, iii) +
+                            " <Lack an operator> " + 
+                            Expression.substr(iii)));
+        }
+    }
+    Pop_The_Stack();
+
+    //std::cout<<"\n";
+    return Operands.back();
+}
+
+int OperatorPrecedence(char op)
+{
+    switch (op)
+    {
+        case '+':
+        case '-':
+            return 1;
+        
+        case '*':
+        case '/':
+            return 2;
+
+        case '^':
+            return 3;
+        
+        default:
+            return 0;
+    }
+}
+/*
+    Test the Expression to see if it has the following properties:
+    - All Parentheses pairs are valid.
+    - After every ^ operator, there's a following pair of parentheses
 */
+int Verify_Parentheses_Expression(const std::string &Expression)
+{
+    int Count_Par(0);
+    for (int iii=0; iii<Expression.size(); ++iii)
+    {
+        switch(Expression[iii])
+        {
+            case '(':
+                ++Count_Par;
+                break;
+            case ')':
+                --Count_Par;
+                if (Count_Par<0)
+                    return false;
+                break;
+            
+            case '^':
+                while (std::isspace(Expression[++iii]) && 
+                        iii<Expression.size())
+                        {}
+
+                if (Expression[iii] != '(')
+                    return -1;
+                
+                ++Count_Par;
+                break;
+        }
+    }
+    return Count_Par==0? true : false;
+}

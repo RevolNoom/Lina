@@ -38,6 +38,7 @@ class Lina
 {
     friend class Lina_Utility<int, const vector<string> &>;
 private:
+//public:
 
     std::unordered_set<std::string> _Keywords;
 
@@ -117,7 +118,6 @@ public:
     int Quit(const std::vector<std::string> & arguments) const;
 
 protected:
-//public:
     /*
         Test a name to see whether it's fit to be a matrix name
         A name must satisfy these condition to be allowed:
@@ -136,8 +136,12 @@ protected:
         @return The resulting matrix
     */
     std::variant<Fraction, Matrix<Fraction>> Calculate(const std::string &expression) const;
-
     
+    /*
+        This is the function that actually do the calculation
+        Calculate() above is only a wrapper
+    */
+    std::variant<Fraction, Matrix<Fraction>> Calculate(const std::string &expression, int begin, int end) const;
     /*
         @brief  Test a name to see whether it has been created before
         @param  The matrix name
@@ -160,8 +164,17 @@ protected:
                 False otherwise
     */
     bool IsKeyword(std::string name) const;
+  
+    /*
+        @brief  Break a string into many substrings, based on the delimiter
+        @param  Expression: The string contains expressions
+        @param  delimPred:  A function which return true if a given character is considered delimiter.
+        @return An array contains broken substrings in @param, from left to right
+                All whitespaces at the beginning and the end of each expressions are trimmed 
+    */  
+    std::vector<std::string> BreakExpressions(const std::string &Expression, int (*delimPred)(int c) );
 
-
+    
     /*
         Create an utility to better manage the application
         return 0 if the utility is added successfully
@@ -181,42 +194,57 @@ protected:
                         const std::string &HelpfilePath);
 
     int CallUtility(const string &Util_Name, const vector<string> &Args);
-
-
-    /*
-        Actually, Calculate() is only a wrapper function.
-        What really happened in Calculate() starts her.
-        RealCalculate() deals with recursive calls, identity matrices,...
-        All the things you shouldn't worry about
-        @param 
-                begin: The beginning position of the position you want to calculate
-                end:    The past-the-end position of the said expression
-        @return
-                The first factor in the expression.
-    */
-    //std::variant<Matrix<Fraction>, Fraction> RealCalculate(const std::string &expression, size_t begin, size_t end) const;
-
 };
 
 /*
     @brief  Look for the leftmost opening parentheses, then find its corresponding closing one
-    @param  The string in need to find the parentheses
+    @param  String in need to find the parentheses
     @return Index of the closing parenthesis of the leftmost opening parenthesis
             -1 if there's no valid parentheses group
 */
-size_t FindMatchingParentheses(const std::string &str);
+size_t FindMatchingParentheses(const std::string &str, int begin, int end);
 
 bool IsInteger(const std::string &str);
 
+
+
 /*
-        @brief  Break a string into many substrings, based on the delimiter
-        @param  Expression: The string contains expressions
-        @param  delimPred:  A function which return true if a given character is considered delimiter.
-        @return An array contains broken substrings in @param, from left to right
-                All whitespaces at the beginning and the end of each expressions are trimmed 
-*/    
-std::vector<std::string> BreakExpressions(const std::string &Expression, int (*delimPred)(int c) );
+        Test the Expression to see if it has the following properties:
+        - All Parentheses pairs are valid.
+        - After every ^ operator, there's a following pair of parentheses
+        
+        @return 1 if this expression has valid parentheses placing
+                -1 if there's no parentheses after power ^ operator
+                0 for general invalidity
+    */
+int Verify_Parentheses_Expression(const std::string &Expression);
+
+/*
+    @param op: One of the following operator: + - *
+    @return 0 if op is not +, -, or *
+            else, a value to show its priority. 
+            Bigger value means more important operator. 
+*/
+int OperatorPrecedence(char op);
+
 std::string TrimWhiteSpace(const std::string &str);
+
+std::string Find_Leftmost_Operand(const std::string &Expression, int begin, int end);
+
+//Some helper functions, for, uhhh..., faster and cleaner coding
+Lina_Operand operator+(const Lina_Operand &Op1, const Lina_Operand &Op2);
+//Some helper functions, for, uhhh..., faster and cleaner coding
+Lina_Operand operator-(const Lina_Operand &Op1, const Lina_Operand &Op2);
+//Some helper functions, for, uhhh..., faster and cleaner coding
+Lina_Operand operator*(const Lina_Operand &Op1, const Lina_Operand &Op2);
+//Some helper functions, for, uhhh..., faster and cleaner coding
+//@param Op1 can be Fraction or Matrix
+//@param Op2 can only be Fraction
+Lina_Operand operator/(const Lina_Operand &Op1, const Lina_Operand &Op2);
+std::ostream& operator<<(std::ostream& os, const Lina_Operand &Op);
+
+Lina_Operand Pow(const Lina_Operand &Base, int power);
+
 /*
     Return true if c==','
 */

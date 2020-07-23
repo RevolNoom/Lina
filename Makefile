@@ -7,7 +7,7 @@ G++ = g++ -std=c++17
 Lina.exe: $(OBJECTS)
 	$(G++)  $(OBJECTS) -o Lina.exe
 	
-main.o: $(LINA_O) fraction.o
+main.o: $(LINA_O) fraction.o main.cpp
 	$(G++) -c main.cpp 
 
 mexception.o: mexception.h

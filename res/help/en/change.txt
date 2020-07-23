@@ -1,15 +1,10 @@
 <Change the value of Matrix>
 		change <Matrix Names> [Rows x columns | Expression]
-	The computer will ask you to enter new values for the matrix.
-	If you choose to change the size of the matrix, simply states the new
-	numbers of rows and columns.
-	E.g.:
-		Ask to input new values:
-			change ABC
-		Change matrix size to 10x10 then input new values:
-			change ABC 10x10
-	You can also assign new value to your matrix by writing an expression.
-	E.g.:
+	+) Enter new values for the matrix row by row:
+		change ABC
+	+) Change the size of the matrix to 10x10 and enter new elements:
+		change ABC 10x10
+	+) Assign new value to your matrix:
 		change ABC=ABC+DEF
 		change ABC=ABC*(DEF+ABC)
 	For more information about Expression, please refer to "help expression"

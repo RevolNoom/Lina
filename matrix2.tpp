@@ -37,66 +37,37 @@ Matrix<_Type> Matrix<_Type>::Inverse() const
                     break;
                 }
             }
-            // std::cout<<"After swapping:\n";
-            // std::cout<<temp<<"\n"<<inv<<"\n";
 
         /*  After looking for elements differ from zero
             We have none.
             So we cannot turn the original matrix into an identity
-        
-            As a result, zero matrix is returned
         */
         if (temp.at(cur, cur)==0)
-            return Matrix<_Type>();
+            throw(Mexception("Matrix is un-invertible."));
 
 
 
         //Transform this row so that it has the element at (iii, iii) is 1
         _Type Normalize= temp.at(cur, cur);
-        // std::cout<<"Normalize: "<<Normalize<<"\n";
-        // std::cout<<"inv.row("<<cur<<") before:\n";
-        // std::cout<<(Matrix<_Type>)(inv.row(cur))<<"\n";
-        inv.row(cur)/=Normalize;
 
-        // std::cout<<"inv.row("<<cur<<") after:\n";
-        // std::cout<<(Matrix<_Type>)(inv.row(cur))<<"\n";
+        inv.row(cur)/=Normalize;
 
         temp.row(cur)/=Normalize;
 
-
-        //std::cout<<"After transformation:\n";
-        //std::cout<<temp<<"\n"<<inv<<"\n";
     
         // Start eliminating so that all elements on this column (except the diagonal one) 
         // are zeroes.
 
-        //std::cout<<"Eliminating: \n";
         for (size_t r=0; r<this->Rows(); ++r)
         {
-            // std::cout<<"r="<<r<<"\n";
             if (r!=cur)
             {
                 _Type Multiplier= temp.at(r, cur);
-                // std::cout<<"temp Before: \n";
-                // std::cout<<temp;
-
-                // std::cout<<"temp After: \n";
                 temp.row(r)-= temp.row(cur)*Multiplier;
-                // std::cout<<temp;
-
-                
-                // std::cout<<"inv Before: \n";
-                // std::cout<<inv;
-
-                // std::cout<<"inv After: \n";
 
                 inv.row(r)-= inv.row(cur)*Multiplier;
-                // std::cout<<inv;
-
             }
         }
-            // std::cout<<"After elimination:\n";
-            // std::cout<<temp<<"\n"<<inv<<"\n<><><><><><><><>\n";
 
     }
     

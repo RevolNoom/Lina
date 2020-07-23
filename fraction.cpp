@@ -66,7 +66,7 @@ Fraction::operator double()
 
 bool Fraction::IsInteger() const
 {
-    return !(_Numerator%_Denominator);
+    return _Denominator==1;
 }
 
 /* I/O  O P E R A T I O N S */
@@ -77,7 +77,7 @@ bool Fraction::IsInteger() const
 std::ostream& operator<<(std::ostream& os, const Fraction& f)
 {
     if (f.IsInteger()) 
-        os<< (f._Numerator/f._Denominator);
+        os<< (f._Numerator);
     else
         os<<f._Numerator<<'/'<<f._Denominator;
     return os;
@@ -101,7 +101,7 @@ long long Fraction::WriteLength() const
 */
 void Fraction::Reduce()
 {
-    long long div=std::__gcd(abs(this->_Numerator), abs(this->_Denominator));
+    long long div=std::__gcd(abs(_Numerator), abs(_Denominator));
     if (_Denominator<0)
         div*=-1;
     _Numerator/=div;

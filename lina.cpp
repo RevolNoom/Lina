@@ -90,11 +90,11 @@ int Lina::GetCommand()
     std::string CommandName;
     ss>>CommandName;
 
+    
     std::transform(CommandName.begin(), 
                     CommandName.end(), 
                     CommandName.begin(), 
                     (int (*)(int)) std::tolower);
-
 
     std::string Arguments;
     std::getline(ss, Arguments);
@@ -186,14 +186,17 @@ int Lina::Create(const std::vector<std::string> &arguments)
         //  Check if the size of the matrix is grabbed
         if (ArgumentParts[2].str().size())
         {
-            _Matrices.insert({ArgumentParts[1].str(),
-                                Matrix<Fraction>(std::stoll(ArgumentParts[3].str()),
-                                                std::stoll(ArgumentParts[4].str()))
-                            });
-            std::cout<<"Matrix "
-                        <<ArgumentParts[1].str() + " "
-                        <<ArgumentParts[3].str() + "x" + ArgumentParts[4].str()
-                        <<" has been created\n";
+            std::string Name=ArgumentParts[1].str();
+
+            Matrix<Fraction> temp(std::stoll(ArgumentParts[3].str()),
+                                                std::stoll(ArgumentParts[4].str()));
+
+            std::cin>>temp;
+
+            _Matrices.insert({Name, temp});
+
+
+            Show({Name});
         }
 
         // This matrix has no size argument
@@ -277,10 +280,6 @@ int Lina::Change(const std::vector<std::string> &arguments)
 }
 
 
-
-
-
-
 int Lina::Show(const std::vector<std::string> &arguments) const
 {
 
@@ -320,30 +319,24 @@ int Lina::Show(const std::vector<std::string> &arguments) const
     else 
     {
         //Print name/expression and result
-        for (auto &Arg: arguments)
+
+        std::string Arg;
+        for (auto &A: arguments)
         {
-            auto ArgumentOption = BreakExpressions(Arg, std::isspace);
-            /*
-            if (ArgumentOption[0]=="--info")
-            {
-                auto Expression=Arg.substr(6);
-                auto Matrix = Calculate(Expression);
-                std::cout<<"Matrix \""<<Expression<<"\" is a "
-                            <<Matrix.Rows()<<"x"<<Matrix.Columns()<<" matrix.\n";
-            }
-            else*/
-            std::cout<<"Matrix \""<<Arg<<"\":\n";
-            auto Result=Calculate(Arg);
-            
-            if (std::holds_alternative<Fraction>(Result))
-                std::cout<<"Matrix "<<Result<" is "
-                <<std::get<Fraction>(Result)<<"*I.\n";
-            else
-                std::cout<<"Matrix "<<Result<" "
-                        <<std::get<Matrix<Fraction>>(Result).Rows()<<"x"
-                        <<std::get<Matrix<Fraction>>(Result).Columns()<<":\n"
-                        <<std::get<Matrix<Fraction>>(Result)<<"\n";
-        }   
+            Arg+=A;
+        }
+        
+        auto Result=Calculate(Arg);
+        
+        if (std::holds_alternative<Fraction>(Result))
+            std::cout<<"Matrix "<<Arg<<" is "
+            <<std::get<Fraction>(Result)<<"*I.\n";
+        else
+            std::cout<<"Matrix "<<Arg<<" "
+                    <<std::get<Matrix<Fraction>>(Result).Rows()<<"x"
+                    <<std::get<Matrix<Fraction>>(Result).Columns()<<":\n"
+                    <<std::get<Matrix<Fraction>>(Result)<<"\n";
+        
     }
     return SHOW;
 }
